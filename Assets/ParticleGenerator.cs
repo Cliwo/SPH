@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+using UnityEditor;
+
 public class ParticleGenerator : MonoBehaviour {
 	public ParticleManager m;
 	public GameObject particle;	
@@ -12,31 +14,66 @@ public class ParticleGenerator : MonoBehaviour {
 	void Start () 
 	{
 		GetComponent<MeshRenderer>().enabled = false;
-		Vector3 center = transform.position;
-		Vector3 extent = transform.localScale * 0.1f;
+		
+	}	
+}
 
-		HashSet<Vector3> set = new HashSet<Vector3>();	
-		for(int i = 0 ; i < 5; i ++)
+
+[CustomEditor(typeof(ParticleGenerator)), CanEditMultipleObjects]
+public class ParticleGeneratorEditor : Editor {
+	ParticleGenerator script;
+	bool isGenerated = false;
+	private void OnEnable() 
+	{
+		script = (ParticleGenerator)target;
+	}
+	public override void OnInspectorGUI() {
+		
+		if(GUILayout.Button("Generate Particle"))
 		{
-			for (int j = 0 ; j< 5; j++)
+			script.GetComponent<MeshRenderer>().enabled = false;
+			Vector3 center = script.transform.position;
+
+			HashSet<Vector3> set = new HashSet<Vector3>();	
+			int countInRow = 4;
+			float offset = 0.015f;	// 0.015f;
+			for(int i = 0 ; i < countInRow; i ++)
 			{
-				for (int k = 0; k < 5; k++)
+				for (int j = 0 ; j< countInRow; j++)
 				{
-					Vector3 pos = new Vector3(i * 0.015f, j * 0.015f, k * 0.015f);
-					pos += center;
-					set.Add(pos);
+					for (int k = 0; k < countInRow; k++)
+					{
+						Vector3 pos = new Vector3((i-countInRow/2) * offset, (j-countInRow/2) * offset, (k-countInRow/2) * offset);
+						pos += center;
+						set.Add(pos);
+					}
 				}
 			}
+			foreach(Vector3 pos in set)
+			{
+				GameObject g = Instantiate(script.particle, pos, Quaternion.identity);
+				g.transform.parent = script.transform;
+				Particle p = g.GetComponent<Particle>();
+				p.mass = 0.02f; 
+				script.m.particles.Add(p);
+			}
 		}
-		foreach(Vector3 pos in set)
+		if(GUILayout.Button("Delete All"))
 		{
-			GameObject g = Instantiate(particle, pos, Quaternion.identity);
-			g.transform.parent = transform;
-			Particle p = g.GetComponent<Particle>();
-			p.mass = 0.02f; 
-			m.particles.Add(p);
+			ClearAllParticles();
 		}
 	}
-	
-	
+
+	private void ClearAllParticles()
+	{
+		script.GetComponent<MeshRenderer>().enabled = true;
+		Transform t = script.transform.childCount != 0 ? script.transform.GetChild(0) : null;
+		while(t!= null)
+		{
+			DestroyImmediate(t.gameObject);
+			t = script.transform.childCount != 0 ? script.transform.GetChild(0) : null;
+		}
+		script.m.particles.Clear();
+
+	}
 }
