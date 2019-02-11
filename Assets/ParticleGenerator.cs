@@ -16,13 +16,17 @@ public class ParticleGenerator : MonoBehaviour {
 		Vector3 extent = transform.localScale * 0.1f;
 
 		HashSet<Vector3> set = new HashSet<Vector3>();	
-		while(set.Count < GenerateCount)
+		for(int i = 0 ; i < 5; i ++)
 		{
-			float x = Random.Range(center.x - extent.x , center.x + extent.x);
-			float y = Random.Range(center.y - extent.y , center.y + extent.y);
-			float z = Random.Range(center.z - extent.z , center.z + extent.z);
-
-			set.Add(new Vector3(x, y, z));
+			for (int j = 0 ; j< 5; j++)
+			{
+				for (int k = 0; k < 5; k++)
+				{
+					Vector3 pos = new Vector3(i * 0.015f, j * 0.015f, k * 0.015f);
+					pos += center;
+					set.Add(pos);
+				}
+			}
 		}
 		foreach(Vector3 pos in set)
 		{

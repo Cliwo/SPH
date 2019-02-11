@@ -8,7 +8,7 @@ public class ParticleManager : MonoBehaviour {
 	public Vector3 gravity = new Vector3(0.0f, -9.8f, 0f);
 	[HideInInspector]
 	public List<Particle> particles;
-	const float smoothingLevel = 0.457f;
+	const float smoothingLevel = 0.0457f;
 	const float TensionThreshold = 7.065f;
 	float h { get {return smoothingLevel;}}
 	void Update () 
@@ -19,14 +19,15 @@ public class ParticleManager : MonoBehaviour {
 			particles.ForEach((p) => UpdateDensity(p)); //중요. 매번 처음에 density 업데이트를 해야함.
 			particles.ForEach((p) => UpdateColorField(p));
 
-			// particles.ForEach((p) => p.AddForce(CalcPressure(p)));
-			// particles.ForEach((p) => p.AddForce(CalcViscosity(p)));
-			particles.ForEach((p) => p.AddForce(CalcSurfaceTension(p, TensionThreshold)));
+			particles.ForEach((p) => p.AddForce(CalcPressure(p)*0.000001f));
+			particles.ForEach((p) => p.AddForce(CalcViscosity(p)*0.000001f));
+			// particles.ForEach((p) => p.AddForce(CalcSurfaceTension(p, TensionThreshold) * 0.000001f));
 			particles.ForEach((p) => p.AddForce(p.mass * gravity)); //Gravity
-
+			
 			particles.ForEach((p) => p.Apply(Time.deltaTime / Steps));
 		}
 	}
+
 	
 	void UpdateDensity(Particle p)
 	{
@@ -63,7 +64,7 @@ public class ParticleManager : MonoBehaviour {
 		return force;
 	}
 
-	Vector3 CalcSurfaceTension(Particle p, float threshold) // TODO : 최적화 고려해보기 
+	Vector3 CalcSurfaceTension(Particle p, float threshold) 
 	{
 		const float sigma = 0.07197f; // 0.0719-> N/m 단위  71.97mN/m (밀리뉴턴, 미터 단위) (25도에서)) 
 		Vector3 n = Vector3.zero;		
@@ -75,16 +76,18 @@ public class ParticleManager : MonoBehaviour {
 		float magnitude = n.magnitude;
 		if(magnitude < threshold)
 		{
+			p.surfaceFlag = false;
 			return Vector3.zero; //n의 magnitude가 너무 작음, 힘을 계산하지 않는다.
 		}
-
+		p.surfaceFlag = true;
 		float laplacian = 0.0f;
 		foreach(Particle j in particles)
 		{
-			laplacian = j.mass / j.density * SmoothKernel_Poly6_Laplacian(p.transform.position - j.transform.position, h);
+			laplacian += j.mass / j.density * SmoothKernel_Poly6_Laplacian(p.transform.position - j.transform.position, h);
 		}
 		float kappa = -laplacian / magnitude;
-		return (sigma * kappa * n);
+		Vector3 surfaceF = (sigma * kappa * n);
+		return surfaceF;
 	}
 
 	float SmoothKernel_Poly6(Vector3 position, float h)
@@ -100,7 +103,9 @@ public class ParticleManager : MonoBehaviour {
 	{
 		if(position.sqrMagnitude <= h * h)
 		{
-			return - 945 / (32*Mathf.PI*Mathf.Pow(h,9.0f)) * position * Mathf.Pow((h*h - position.sqrMagnitude), 2.0f);
+			float coef = - 945.0f / (32*Mathf.PI*Mathf.Pow(h,9.0f));
+			Vector3 result  =  coef * position * Mathf.Pow((h*h - position.sqrMagnitude), 2.0f);
+			return result;
 		}
 		return Vector3.zero;
 	}
@@ -109,8 +114,11 @@ public class ParticleManager : MonoBehaviour {
 	{
 		if(position.sqrMagnitude < h * h)
 		{
-			return 945 / (32 * Mathf.PI * Mathf.Pow(h, 9.0f)) *(-1 * Mathf.Pow((h*h - position.sqrMagnitude),2.0f) + 
-			4 * position.magnitude*(h*h - position.sqrMagnitude));
+			// return 945 / (32 * Mathf.PI * Mathf.Pow(h, 9.0f)) *(-1 * Mathf.Pow((h*h - position.sqrMagnitude),2.0f) + 
+			// 4 * position.magnitude*(h*h - position.sqrMagnitude));
+			float result = -945.0f / (32.0f * Mathf.PI * Mathf.Pow(h,9.0f)) * (h*h - position.sqrMagnitude) 
+				* (3.0f * h*h - 7.0f * position.sqrMagnitude);
+			return result;
 		}
 		return 0.0f;
 	}

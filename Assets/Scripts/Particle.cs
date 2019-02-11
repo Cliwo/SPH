@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class Particle : MonoBehaviour { //Mono일 필요가 없을 듯
+	private MeshRenderer m_render;
 	private static Vector3 bottomFloorNormal = new Vector3(0.0f, 1.0f, 0.0f);
 	private static Vector3 rightFloorNormal = new Vector3(-1.0f, 0.0f, 0.0f);
 	private static Vector3 leftFloorNormal = new Vector3(1.0f, 0.0f, 0.0f);
@@ -10,14 +11,16 @@ public class Particle : MonoBehaviour { //Mono일 필요가 없을 듯
 	private static Vector3 nearFloorNormal = new Vector3(0.0f, 0.0f, 1.0f);
 	private static Vector3 farFloorNormal = new Vector3(0.0f, 0.0f, -1.0f);
 	
-	
+	const float width = 0.1f;
+	const float widthHalf = width * 0.5f;
 	private static Vector3 bottomFloorPosition = new Vector3(0.0f, 0.0f, 0.0f);
-	private static Vector3 topFloorPosition = new Vector3(0.0f, 10.0f, 0.0f);
-	private static Vector3 rightFloorPosition = new Vector3(5.0f, 5.0f, 0.0f);
-	private static Vector3 leftFloorPosition = new Vector3(-5.0f, 5.0f, 0.0f);
-	private static Vector3 nearFloorPosition = new Vector3(0.0f, 5.0f, -5.0f);
-	private static Vector3 farFloorPosition = new Vector3(0.0f, 5.0f, 5.0f);
+	private static Vector3 topFloorPosition = new Vector3(0.0f, width, 0.0f);
+	private static Vector3 rightFloorPosition = new Vector3(widthHalf, widthHalf, 0.0f);
+	private static Vector3 leftFloorPosition = new Vector3(-widthHalf, widthHalf, 0.0f);
+	private static Vector3 nearFloorPosition = new Vector3(0.0f, widthHalf, -widthHalf);
+	private static Vector3 farFloorPosition = new Vector3(0.0f, widthHalf, widthHalf);
 
+	public bool surfaceFlag = false;
 	public float colorField;
 	public float density;
 	public float mass;
@@ -34,7 +37,10 @@ public class Particle : MonoBehaviour { //Mono일 필요가 없을 듯
 	}
 	public Vector3 force;
 	public Vector3 velocity;
-
+	void Awake() 
+	{
+		m_render = gameObject.GetComponent<MeshRenderer>();
+	}
 	public void AddForce(Vector3 force)
 	{
 		this.force += force;
@@ -47,9 +53,17 @@ public class Particle : MonoBehaviour { //Mono일 필요가 없을 듯
 	public float alpha = 0.7f; //반발계수
 	public void Apply(float deltaTime)
 	{
-		this.velocity += force / this.mass * deltaTime;
 		this.transform.position += this.velocity * deltaTime;
+		this.velocity += force / this.mass * deltaTime;
 
+		if(surfaceFlag)
+		{
+			m_render.material.color = Color.red;
+		}
+		else
+		{
+			m_render.material.color = Color.blue;
+		}
 		CalcWallCollision(bottomFloorNormal, bottomFloorPosition);
 		CalcWallCollision(topFloorNormal , topFloorPosition);
 		CalcWallCollision(leftFloorNormal, leftFloorPosition);
