@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+
 public class Particle : MonoBehaviour { //Mono일 필요가 없을 듯
 	private MeshRenderer m_render;
 	private static Vector3 bottomFloorNormal = new Vector3(0.0f, 1.0f, 0.0f);
@@ -11,8 +12,8 @@ public class Particle : MonoBehaviour { //Mono일 필요가 없을 듯
 	private static Vector3 nearFloorNormal = new Vector3(0.0f, 0.0f, 1.0f);
 	private static Vector3 farFloorNormal = new Vector3(0.0f, 0.0f, -1.0f);
 	
-	const float width = 0.1f;
-	const float widthHalf = width * 0.5f;
+	public const float width = 0.5f;
+	public const float widthHalf = width * 0.5f;
 	private static Vector3 bottomFloorPosition = new Vector3(0.0f, 0.0f, 0.0f);
 	private static Vector3 topFloorPosition = new Vector3(0.0f, width, 0.0f);
 	private static Vector3 rightFloorPosition = new Vector3(widthHalf, widthHalf, 0.0f);
@@ -65,7 +66,7 @@ public class Particle : MonoBehaviour { //Mono일 필요가 없을 듯
 			m_render.material.color = Color.blue;
 		}
 		CalcWallCollision(bottomFloorNormal, bottomFloorPosition);
-		CalcWallCollision(topFloorNormal , topFloorPosition);
+		// CalcWallCollision(topFloorNormal , topFloorPosition);
 		CalcWallCollision(leftFloorNormal, leftFloorPosition);
 		CalcWallCollision(rightFloorNormal, rightFloorPosition);
 		CalcWallCollision(nearFloorNormal, nearFloorPosition);
@@ -83,7 +84,7 @@ public class Particle : MonoBehaviour { //Mono일 필요가 없을 듯
 			if (Vector3.Dot(this.transform.position - floorPosition, floorNormal) < 0)
 				this.transform.position -= Vector3.Dot(this.transform.position - floorPosition, floorNormal) * floorNormal;
 		}
-		else if (Vector3.Dot(floorNormal, this.transform.position - floorPosition) < 0.0001) //Contact
+		else if (Vector3.Dot(floorNormal, this.transform.position - floorPosition) < float.Epsilon) //Contact
 		{
 			Vector3 vn = Vector3.Dot(floorNormal, this.transform.position) * floorNormal;
 			Vector3 vt = this.transform.position - vn;
