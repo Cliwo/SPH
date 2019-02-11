@@ -5,30 +5,28 @@ using System.Linq;
 public class ParticleManager : MonoBehaviour {
 
 	public int Steps;
+	[HideInInspector]
 	public Vector3 gravity = new Vector3(0.0f, -9.8f, 0f);
 	[HideInInspector]
 	public List<Particle> particles;
 	const float smoothingLevel = 0.0457f;
 	const float TensionThreshold = 7.065f;
 	float h { get {return smoothingLevel;}}
-	void Update () 
+
+	void FixedUpdate() 
 	{
-		for(int i = 0 ; i< Steps; i++)
-		{
-			particles.ForEach((p) => p.ClearForce());
-			particles.ForEach((p) => UpdateDensity(p)); //중요. 매번 처음에 density 업데이트를 해야함.
-			particles.ForEach((p) => UpdateColorField(p));
+		const float fixedUpdateTime = 0.002f;
+		particles.ForEach((p) => p.ClearForce());
+		particles.ForEach((p) => UpdateDensity(p)); //중요. 매번 처음에 density 업데이트를 해야함.
+		particles.ForEach((p) => UpdateColorField(p));
 
-			particles.ForEach((p) => p.AddForce(CalcPressure(p)*0.000001f));
-			particles.ForEach((p) => p.AddForce(CalcViscosity(p)*0.000001f));
-			// particles.ForEach((p) => p.AddForce(CalcSurfaceTension(p, TensionThreshold) * 0.000001f));
-			particles.ForEach((p) => p.AddForce(p.mass * gravity)); //Gravity
-			
-			particles.ForEach((p) => p.Apply(Time.deltaTime / Steps));
-		}
+		particles.ForEach((p) => p.AddForce(CalcPressure(p) * 0.000008f));
+		particles.ForEach((p) => p.AddForce(CalcViscosity(p) * 0.0000001f));
+		particles.ForEach((p) => p.AddForce(CalcSurfaceTension(p, TensionThreshold) * 0.0000001f));
+		particles.ForEach((p) => p.AddForce(p.mass * gravity)); //Gravity
+		
+		particles.ForEach((p) => p.Apply(fixedUpdateTime));
 	}
-
-	
 	void UpdateDensity(Particle p)
 	{
 		//TODO : 업데이트시 가장 좋은건 kernel의 0조건을 먼저 판단하는 것임! (계산 처음부터 안하게) 시간나서 최적화 할 때 고려해보기
@@ -94,7 +92,7 @@ public class ParticleManager : MonoBehaviour {
 	{
 		if(position.sqrMagnitude < h * h)
 		{
-			float result = 315 / (64 * Mathf.PI * Mathf.Pow(h,9.0f)) * Mathf.Pow((h*h - position.sqrMagnitude),3.0f);
+			float result = 315 / (64 * Mathf.PI * IntPow(h,9)) * IntPow((h*h - position.sqrMagnitude),3);
 			return result;
 		}
 		return 0.0f;
@@ -103,8 +101,8 @@ public class ParticleManager : MonoBehaviour {
 	{
 		if(position.sqrMagnitude <= h * h)
 		{
-			float coef = - 945.0f / (32*Mathf.PI*Mathf.Pow(h,9.0f));
-			Vector3 result  =  coef * position * Mathf.Pow((h*h - position.sqrMagnitude), 2.0f);
+			float coef = - 945.0f / (32*Mathf.PI*IntPow(h,9));
+			Vector3 result  =  coef * position * IntPow((h*h - position.sqrMagnitude), 2);
 			return result;
 		}
 		return Vector3.zero;
@@ -114,9 +112,9 @@ public class ParticleManager : MonoBehaviour {
 	{
 		if(position.sqrMagnitude < h * h)
 		{
-			// return 945 / (32 * Mathf.PI * Mathf.Pow(h, 9.0f)) *(-1 * Mathf.Pow((h*h - position.sqrMagnitude),2.0f) + 
+			// return 945 / (32 * Mathf.PI * IntPow(h, 9.0f)) *(-1 * IntPow((h*h - position.sqrMagnitude),2.0f) + 
 			// 4 * position.magnitude*(h*h - position.sqrMagnitude));
-			float result = -945.0f / (32.0f * Mathf.PI * Mathf.Pow(h,9.0f)) * (h*h - position.sqrMagnitude) 
+			float result = -945.0f / (32.0f * Mathf.PI * IntPow(h,9)) * (h*h - position.sqrMagnitude) 
 				* (3.0f * h*h - 7.0f * position.sqrMagnitude);
 			return result;
 		}
@@ -128,7 +126,7 @@ public class ParticleManager : MonoBehaviour {
 	{
 		if(position.sqrMagnitude < h * h)
 		{
-			return - (45 / Mathf.PI / Mathf.Pow(h,6.0f) * Mathf.Pow(h - position.magnitude, 2.0f) * position.normalized);
+			return - (45 / Mathf.PI / IntPow(h,6) * IntPow(h - position.magnitude, 2) * position.normalized);
 			//이거 position이 아니라 normailzed position 인것 같음 !!!! := 맞는듯! normalized 로 쓰는 다른 코드도 발견
 			/*
 			https://www8.cs.umu.se/kurser/TDBD24/VT06/lectures/sphsurvivalkit.pdf 
@@ -143,8 +141,16 @@ public class ParticleManager : MonoBehaviour {
 	{
 		if(position.sqrMagnitude < h * h)
 		{
-			return 45 / Mathf.PI / Mathf.Pow(h,6.0f) * (h - position.magnitude);
+			return 45 / Mathf.PI / IntPow(h,6) * (h - position.magnitude);
 		}
 		return 0.0f;
+	}
+
+	private float IntPow(float number, int p)
+	{
+		float origin = number;
+		for(int i = 0 ; i < p; i++)
+			number *= origin;
+		return number;
 	}
 }
