@@ -4,7 +4,16 @@ using UnityEngine;
 using System.Linq;
 public class ParticleManager : MonoBehaviour {
 
-	public int Steps;
+	public bool ApplyPressure = true;
+	public bool ApplyViscosity = true;
+	public bool ApplySurfaceTension = true;
+	public bool ApplyGravity = true;
+
+	public float PressureCoef = 0.000008f;
+	public float ViscosityCoef = 0.0000001f;
+	public float SurfaceTensionCoef = 0.0000001f;
+	public float GravityCoef = 10.0f;
+	public float Steps;
 	[HideInInspector]
 	public Vector3 gravity = new Vector3(0.0f, -9.8f, 0f);
 	[HideInInspector]
@@ -15,17 +24,20 @@ public class ParticleManager : MonoBehaviour {
 
 	void FixedUpdate() 
 	{
-		const float fixedUpdateTime = 0.002f;
 		particles.ForEach((p) => p.ClearForce());
 		particles.ForEach((p) => UpdateDensity(p)); //중요. 매번 처음에 density 업데이트를 해야함.
 		particles.ForEach((p) => UpdateColorField(p));
 
-		particles.ForEach((p) => p.AddForce(CalcPressure(p) * 0.000008f));
-		particles.ForEach((p) => p.AddForce(CalcViscosity(p) * 0.0000001f));
-		particles.ForEach((p) => p.AddForce(CalcSurfaceTension(p, TensionThreshold) * 0.0000001f));
-		particles.ForEach((p) => p.AddForce(p.mass * gravity)); //Gravity
+		if(ApplyPressure)
+			particles.ForEach((p) => p.AddForce(CalcPressure(p) * PressureCoef));
+		if(ApplyViscosity)
+			particles.ForEach((p) => p.AddForce(CalcViscosity(p) * ViscosityCoef));
+		if(ApplySurfaceTension)
+			particles.ForEach((p) => p.AddForce(CalcSurfaceTension(p, TensionThreshold) * SurfaceTensionCoef));
+		if(ApplyGravity)
+			particles.ForEach((p) => p.AddForce(p.mass * gravity * GravityCoef)); //Gravity
 		
-		particles.ForEach((p) => p.Apply(fixedUpdateTime));
+		particles.ForEach((p) => p.Apply(Steps));
 	}
 	void UpdateDensity(Particle p)
 	{
