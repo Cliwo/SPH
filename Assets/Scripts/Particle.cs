@@ -55,7 +55,7 @@ public class Particle : MonoBehaviour { //Mono일 필요가 없을 듯
 	public void Apply(float deltaTime)
 	{
 		this.transform.position += this.velocity * deltaTime;
-		this.velocity += force / this.mass * deltaTime;
+		this.velocity += force / this.density * deltaTime;
 
 		if(surfaceFlag)
 		{
@@ -65,6 +65,7 @@ public class Particle : MonoBehaviour { //Mono일 필요가 없을 듯
 		{
 			m_render.material.color = Color.blue;
 		}
+
 		CalcWallCollision(bottomFloorNormal, bottomFloorPosition);
 		// CalcWallCollision(topFloorNormal , topFloorPosition);
 		CalcWallCollision(leftFloorNormal, leftFloorPosition);
