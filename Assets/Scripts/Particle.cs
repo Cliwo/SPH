@@ -37,25 +37,31 @@ public class Particle : MonoBehaviour { //Mono일 필요가 없을 듯
 		}
 	}
 	public Vector3 force;
+	public Vector3 acceleration;
 	public Vector3 velocity;
 	void Awake() 
 	{
 		m_render = gameObject.GetComponent<MeshRenderer>();
 	}
-	public void AddForce(Vector3 force)
+	public void AddAcceleration(Vector3 acc)
 	{
-		this.force += force;
+		this.acceleration += acc;
 	}
-	public void ClearForce()
+	public void ClearAcceleration()
 	{
-		this.force = Vector3.zero;
+		this.acceleration = Vector3.zero;
 	}
 
 	public float alpha = 0.7f; //반발계수
 	public void Apply(float deltaTime)
 	{
-		this.transform.position += this.velocity * deltaTime;
-		this.velocity += force / this.density * deltaTime;
+		this.acceleration /= this.density;
+
+		Vector3 newPosition = transform.position + velocity * deltaTime + acceleration * deltaTime *deltaTime;
+		Vector3 newVelocity = (newPosition - transform.position) / deltaTime;
+
+		this.transform.position = newPosition;
+		this.velocity = newVelocity;
 
 		if(surfaceFlag)
 		{

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 public class ParticleManager : MonoBehaviour {
-
 	public bool ApplyPressure = true;
 	public bool ApplyViscosity = true;
 	public bool ApplySurfaceTension = true;
@@ -24,18 +23,18 @@ public class ParticleManager : MonoBehaviour {
 
 	void FixedUpdate() 
 	{
-		particles.ForEach((p) => p.ClearForce());
+		particles.ForEach((p) => p.ClearAcceleration());
 		particles.ForEach((p) => UpdateDensity(p)); //중요. 매번 처음에 density 업데이트를 해야함.
-		particles.ForEach((p) => UpdateColorField(p));
+		//particles.ForEach((p) => UpdateColorField(p));
 
 		if(ApplyPressure)
-			particles.ForEach((p) => p.AddForce(CalcPressure(p) * PressureCoef));
+			particles.ForEach((p) => p.AddAcceleration(CalcPressure(p) * PressureCoef));
 		if(ApplyViscosity)
-			particles.ForEach((p) => p.AddForce(CalcViscosity(p) * ViscosityCoef));
+			particles.ForEach((p) => p.AddAcceleration(CalcViscosity(p) * ViscosityCoef));
 		if(ApplySurfaceTension)
-			particles.ForEach((p) => p.AddForce(CalcSurfaceTension(p, TensionThreshold) * SurfaceTensionCoef));
+			particles.ForEach((p) => p.AddAcceleration(CalcSurfaceTension(p, TensionThreshold) * SurfaceTensionCoef));
 		if(ApplyGravity)
-			particles.ForEach((p) => p.AddForce(p.mass * gravity * GravityCoef)); //Gravity
+			particles.ForEach((p) => p.AddAcceleration(gravity * p.density * GravityCoef)); //Gravity
 		
 		particles.ForEach((p) => p.Apply(Steps));
 	}
@@ -46,6 +45,7 @@ public class ParticleManager : MonoBehaviour {
 	}
 	void UpdateColorField(Particle p) //항상 Density update이후에 호출되어야한다.
 	{
+		//2.12 쓸모 없는 놈인듯? colorFieldNormal 계산시 굳이 필요하지 않음. 
 		p.colorField = particles.Sum((j) => j.mass / j.density * SmoothKernel_Poly6(p.transform.position - j.transform.position, h));
 	}
 
@@ -55,9 +55,13 @@ public class ParticleManager : MonoBehaviour {
 		float pressure_I = p.pressure;
 		foreach(Particle j in particles)
 		{
+			if((p.transform.position - j.transform.position).sqrMagnitude < float.Epsilon)
+				continue;
 			float pressure_J = j.pressure; 
-			force += -0.5f * j.mass / j.density * ( pressure_I + pressure_J ) * SmoothKernel_Spiky_Gradient(p.transform.position - j.transform.position , h);
+			//force += -0.5f * j.mass / j.density * ( pressure_I + pressure_J ) * SmoothKernel_Spiky_Gradient(p.transform.position - j.transform.position , h);
+			force += (pressure_I / (p.density * p.density) + pressure_J/ (j.density * j.density)) * SmoothKernel_Spiky_Gradient(p.transform.position - j.transform.position , h);
 		}
+		force *= - p.mass * p.density; // 2.12 density 를 왜 곱해?? 논문식은 이렇지 않음
 		return force;
 	}
 
@@ -68,6 +72,8 @@ public class ParticleManager : MonoBehaviour {
 		Vector3 force = Vector3.zero;
 		foreach(Particle j in particles)
 		{
+			if((p.transform.position - j.transform.position).sqrMagnitude < float.Epsilon)
+				continue;
 			force += j.mass / (j.density) * (j.velocity - p.velocity) * SmoothKernel_Viscosity_Laplacian(p.transform.position - j.transform.position, h);
 		}
 		force *= viscosityCoefficient;
@@ -80,8 +86,7 @@ public class ParticleManager : MonoBehaviour {
 		Vector3 n = Vector3.zero;		
 		foreach(Particle j in particles)
 		{
-			Vector3 result = j.mass / j.density * SmoothKernel_Poly6_Gradient(p.transform.position - j.transform.position, h);
-			n += result;
+			n += j.mass / j.density * SmoothKernel_Poly6_Gradient(p.transform.position - j.transform.position, h);
 		}
 		float magnitude = n.magnitude;
 		if(magnitude < threshold)
@@ -138,7 +143,7 @@ public class ParticleManager : MonoBehaviour {
 	{
 		if(position.sqrMagnitude < h * h)
 		{
-			return - (45 / Mathf.PI / IntPow(h,6) * IntPow(h - position.magnitude, 2) * position.normalized);
+			return - (45.0f / Mathf.PI / IntPow(h,6) * IntPow(h - position.magnitude, 2) * position.normalized);
 			//이거 position이 아니라 normailzed position 인것 같음 !!!! := 맞는듯! normalized 로 쓰는 다른 코드도 발견
 			/*
 			https://www8.cs.umu.se/kurser/TDBD24/VT06/lectures/sphsurvivalkit.pdf 
@@ -153,7 +158,7 @@ public class ParticleManager : MonoBehaviour {
 	{
 		if(position.sqrMagnitude < h * h)
 		{
-			return 45 / Mathf.PI / IntPow(h,6) * (h - position.magnitude);
+			return 45.0f / Mathf.PI / IntPow(h,6) * (h - position.magnitude);
 		}
 		return 0.0f;
 	}
