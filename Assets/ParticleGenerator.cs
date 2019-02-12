@@ -8,7 +8,7 @@ public class ParticleGenerator : MonoBehaviour {
 	public ParticleManager m;
 	public GameObject particle;	
 	public int GenerateCount;
-	
+	public float offset = 0.015f;
 
 	// Use this for initialization
 	void Start () 
@@ -28,15 +28,15 @@ public class ParticleGeneratorEditor : Editor {
 		script = (ParticleGenerator)target;
 	}
 	public override void OnInspectorGUI() {
-		
+
 		if(GUILayout.Button("Generate Particle"))
 		{
 			script.GetComponent<MeshRenderer>().enabled = false;
 			Vector3 center = script.transform.position;
 
 			HashSet<Vector3> set = new HashSet<Vector3>();	
-			int countInRow = 4;
-			float offset = 0.015f;	// 0.015f;
+			int countInRow = script.GenerateCount;
+			float offset = script.offset;
 			for(int i = 0 ; i < countInRow; i ++)
 			{
 				for (int j = 0 ; j< countInRow; j++)
@@ -62,6 +62,7 @@ public class ParticleGeneratorEditor : Editor {
 		{
 			ClearAllParticles();
 		}
+		DrawDefaultInspector();
 	}
 
 	private void ClearAllParticles()
