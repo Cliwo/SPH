@@ -36,10 +36,10 @@ public class ParticleGeneratorEditor : Editor {
 
 			HashSet<Vector3> set = new HashSet<Vector3>();	
 			int countInRow = script.GenerateCount;
-			float offset = script.offset;
+			float offset = script.m.h / 2;
 			for(int i = 0 ; i < countInRow; i ++)
 			{
-				for (int j = 0 ; j< countInRow; j++)
+				for (int j = 0 ; j< countInRow * 2; j++)
 				{
 					for (int k = 0; k < countInRow; k++)
 					{

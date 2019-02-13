@@ -12,7 +12,7 @@ public class Particle : MonoBehaviour { //Mono일 필요가 없을 듯
 	private static Vector3 nearFloorNormal = new Vector3(0.0f, 0.0f, 1.0f);
 	private static Vector3 farFloorNormal = new Vector3(0.0f, 0.0f, -1.0f);
 	
-	public const float width = 0.5f;
+	public const float width = 0.15f;
 	public const float widthHalf = width * 0.5f;
 	private static Vector3 bottomFloorPosition = new Vector3(0.0f, 0.0f, 0.0f);
 	private static Vector3 topFloorPosition = new Vector3(0.0f, width, 0.0f);
@@ -39,6 +39,12 @@ public class Particle : MonoBehaviour { //Mono일 필요가 없을 듯
 	public Vector3 force;
 	public Vector3 acceleration;
 	public Vector3 velocity;
+
+	//debug
+	public Vector3 f_pressure;
+	public Vector3 f_viscosity;
+	public Vector3 f_surface;
+
 	void Awake() 
 	{
 		m_render = gameObject.GetComponent<MeshRenderer>();
@@ -55,6 +61,9 @@ public class Particle : MonoBehaviour { //Mono일 필요가 없을 듯
 	public float alpha = 0.7f; //반발계수
 	public void Apply(float deltaTime)
 	{
+		this.acceleration += f_pressure;
+		this.acceleration += f_viscosity;
+		this.acceleration += f_surface;
 		this.acceleration /= this.density;
 
 		Vector3 newPosition = transform.position + velocity * deltaTime + acceleration * deltaTime *deltaTime;

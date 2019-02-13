@@ -19,7 +19,7 @@ public class ParticleManager : MonoBehaviour {
 	public List<Particle> particles;
 	const float smoothingLevel = 0.0457f;
 	const float TensionThreshold = 7.065f;
-	float h { get {return smoothingLevel;}}
+	public float h { get {return smoothingLevel;}}
 
 	void FixedUpdate() 
 	{
@@ -28,11 +28,11 @@ public class ParticleManager : MonoBehaviour {
 		//particles.ForEach((p) => UpdateColorField(p));
 
 		if(ApplyPressure)
-			particles.ForEach((p) => p.AddAcceleration(CalcPressure(p) * PressureCoef));
+			particles.ForEach((p) => p.f_pressure = (CalcPressure(p) * PressureCoef));
 		if(ApplyViscosity)
-			particles.ForEach((p) => p.AddAcceleration(CalcViscosity(p) * ViscosityCoef));
+			particles.ForEach((p) => p.f_viscosity = (CalcViscosity(p) * ViscosityCoef));
 		if(ApplySurfaceTension)
-			particles.ForEach((p) => p.AddAcceleration(CalcSurfaceTension(p, TensionThreshold) * SurfaceTensionCoef));
+			particles.ForEach((p) => p.f_surface = (CalcSurfaceTension(p, TensionThreshold) * SurfaceTensionCoef));
 		if(ApplyGravity)
 			particles.ForEach((p) => p.AddAcceleration(gravity * p.density * GravityCoef)); //Gravity
 		
@@ -58,8 +58,11 @@ public class ParticleManager : MonoBehaviour {
 			if((p.transform.position - j.transform.position).sqrMagnitude < float.Epsilon)
 				continue;
 			float pressure_J = j.pressure; 
+			float i_poly = (pressure_I / (p.density * p.density));
+			float j_poly = pressure_J/ (j.density * j.density);
+			Vector3 grad = SmoothKernel_Spiky_Gradient(p.transform.position - j.transform.position , h);
 			//force += -0.5f * j.mass / j.density * ( pressure_I + pressure_J ) * SmoothKernel_Spiky_Gradient(p.transform.position - j.transform.position , h);
-			force += (pressure_I / (p.density * p.density) + pressure_J/ (j.density * j.density)) * SmoothKernel_Spiky_Gradient(p.transform.position - j.transform.position , h);
+			force += (i_poly + j_poly) * grad;
 		}
 		force *= - p.mass * p.density; // 2.12 density 를 왜 곱해?? 논문식은 이렇지 않음
 		return force;
@@ -109,7 +112,10 @@ public class ParticleManager : MonoBehaviour {
 	{
 		if(position.sqrMagnitude < h * h)
 		{
-			float result = 315 / (64 * Mathf.PI * IntPow(h,9)) * IntPow((h*h - position.sqrMagnitude),3);
+			double expo = IntPow(h,9);
+			double d_coef = 315.0 / (64.0 * Mathf.PI * IntPow(h,9)) ;
+			float coef = 315.0f / (64.0f * Mathf.PI * IntPow(h,9)) ;
+			float result = coef * IntPow((h*h - position.sqrMagnitude),3);
 			return result;
 		}
 		return 0.0f;
@@ -143,7 +149,9 @@ public class ParticleManager : MonoBehaviour {
 	{
 		if(position.sqrMagnitude < h * h)
 		{
-			return - (45.0f / Mathf.PI / IntPow(h,6) * IntPow(h - position.magnitude, 2) * position.normalized);
+			float coef =- (45.0f / Mathf.PI / IntPow(h,6));
+			float i = IntPow(h - position.magnitude, 2);
+			return coef * i * position.normalized ;
 			//이거 position이 아니라 normailzed position 인것 같음 !!!! := 맞는듯! normalized 로 쓰는 다른 코드도 발견
 			/*
 			https://www8.cs.umu.se/kurser/TDBD24/VT06/lectures/sphsurvivalkit.pdf 
@@ -166,7 +174,7 @@ public class ParticleManager : MonoBehaviour {
 	private float IntPow(float number, int p)
 	{
 		float origin = number;
-		for(int i = 0 ; i < p; i++)
+		for(int i = 1 ; i < p; i++)
 			number *= origin;
 		return number;
 	}
