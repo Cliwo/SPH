@@ -11,6 +11,7 @@ using Unity.Jobs;
 public class SPHSystem : JobComponentSystem 
 {
 	ComponentGroup SPHCharacterGroup;
+	ComponentGroup SPHColliderGroup;
 	List<SPHParticle> uniqueTypes = new List<SPHParticle>(10);
 	List<PreviousParticle> previousParticles = new List<PreviousParticle>();
 
@@ -25,10 +26,14 @@ public class SPHSystem : JobComponentSystem
 	{
 		SPHCharacterGroup = GetComponentGroup(ComponentType.ReadOnly(typeof(SPHParticle)), typeof(Position), typeof(SPHVelocity));
 		//position 과 velocity는 수정해야해서 readonly 아닌듯?
+		SPHColliderGroup = GetComponentGroup(ComponentType.ReadOnly(typeof(SPHCollider)));
 	}
 	protected override JobHandle OnUpdate(JobHandle inputDeps)
 	{
 		EntityManager.GetAllUniqueSharedComponentData(uniqueTypes);
+
+		ComponentDataArray<SPHCollider> colliders = SPHColliderGroup.GetComponentDataArray<SPHCollider>();
+		int colliderCount = colliders.Length;
 		//collider 부분 안함. 
 		for (int typeIndex = 1; typeIndex < uniqueTypes.Count; typeIndex++)
 		{
@@ -56,7 +61,8 @@ public class SPHSystem : JobComponentSystem
 			NativeArray<int> particleIndices = new NativeArray<int>(particleCount, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
 
 			NativeArray<int> cellOffsetTableNative = new NativeArray<int>(cellOffsetTable, Allocator.TempJob);
-			
+			NativeArray<SPHCollider> copyColliders = new NativeArray<SPHCollider>(colliderCount, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
+
 			/* Part 2 : PreviousParticle 생성 */
 			PreviousParticle nextParticles = new PreviousParticle
 			{
@@ -68,7 +74,7 @@ public class SPHSystem : JobComponentSystem
 				particlesDensity = particlesDensity,
 				particleIndices = particleIndices,
 				cellOffsetTable = cellOffsetTableNative,
-				// copyColliders = copyColliders;
+				copyColliders = copyColliders
 			};
 
 			if (cacheIndex > previousParticles.Count - 1)
@@ -85,7 +91,7 @@ public class SPHSystem : JobComponentSystem
 				previousParticles[cacheIndex].particlesDensity.Dispose();
 				previousParticles[cacheIndex].particleIndices.Dispose();
 				previousParticles[cacheIndex].cellOffsetTable.Dispose();
-				// previousParticles[cacheIndex].copyColliders.Dispose();
+				previousParticles[cacheIndex].copyColliders.Dispose();
 			}
 			// 의문 : 지금 생성하는 방식이 미리 메모리 할당을 다하고 (new)에서, 조건을 보고 Count가 Index를 넘어서면 미리 생성한걸 해제하는 것 같은데 
 			// 그렇게 안하고 조건을 미리보고 조건에 맞으면 생성하면 안됨?? 코드가 더럽지 않음 이러면?
@@ -100,8 +106,8 @@ public class SPHSystem : JobComponentSystem
 			CopyComponentData<SPHVelocity> particlesVelocityJob = new CopyComponentData<SPHVelocity> { Source = velocities, Results = particlesVelocity };
 			JobHandle particlesVelocityJobHandle = particlesVelocityJob.Schedule(particleCount, 64, inputDeps);
 
-			// CopyComponentData<SPHCollider> copyCollidersJob = new CopyComponentData<SPHCollider> { Source = colliders, Results = copyColliders };
-			// JobHandle copyCollidersJobHandle = copyCollidersJob.Schedule(colliderCount, 64, inputDeps);
+			CopyComponentData<SPHCollider> copyCollidersJob = new CopyComponentData<SPHCollider> { Source = colliders, Results = copyColliders };
+			JobHandle copyCollidersJobHandle = copyCollidersJob.Schedule(colliderCount, 64, inputDeps);
 
 			MemsetNativeArray<float> particlesPressureJob = new MemsetNativeArray<float> { Source = particlesPressure, Value = 0.0f };
 			JobHandle particlesPressureJobHandle = particlesPressureJob.Schedule(particleCount, 64, inputDeps);
@@ -176,17 +182,17 @@ public class SPHSystem : JobComponentSystem
             JobHandle integrateJobHandle = integrateJob.Schedule(particleCount, 64, computeForcesJobHandle);
 
 			/* Part 6 : Collider 와 Apply Positions 파트, 나는 Collider 부분은 제외해버림  */
-			// JobHandle mergedIntegrateCollider = JobHandle.CombineDependencies(integrateJobHandle, copyCollidersJobHandle);
+			JobHandle mergedIntegrateCollider = JobHandle.CombineDependencies(integrateJobHandle, copyCollidersJobHandle);
 
-			// // Compute Colliders
-			// ComputeColliders computeCollidersJob = new ComputeColliders
-			// {
-			// 	particlesPosition = particlesPosition,
-			// 	particlesVelocity = particlesVelocity,
-			// 	copyColliders = copyColliders,
-			// 	settings = settings
-			// };
-			// JobHandle computeCollidersJobHandle = computeCollidersJob.Schedule(particleCount, 64, mergedIntegrateCollider);
+			// Compute Colliders
+			ComputeColliders computeCollidersJob = new ComputeColliders
+			{
+				particlesPosition = particlesPosition,
+				particlesVelocity = particlesVelocity,
+				copyColliders = copyColliders,
+				settings = settings
+			};
+			JobHandle computeCollidersJobHandle = computeCollidersJob.Schedule(particleCount, 64, mergedIntegrateCollider);
 
 			// Apply positions
 			ApplyPositions applyPositionsJob = new ApplyPositions
@@ -196,8 +202,8 @@ public class SPHSystem : JobComponentSystem
 				positions = positions,
 				velocities = velocities
 			};
-			// JobHandle applyPositionsJobHandle = applyPositionsJob.Schedule(particleCount, 64, computeCollidersJobHandle);
-			JobHandle applyPositionsJobHandle = applyPositionsJob.Schedule(particleCount, 64, integrateJobHandle);
+			JobHandle applyPositionsJobHandle = applyPositionsJob.Schedule(particleCount, 64, computeCollidersJobHandle);
+			// JobHandle applyPositionsJobHandle = applyPositionsJob.Schedule(particleCount, 64, integrateJobHandle);
 			// 이 부분 주의! : 내가 Collider가 없으니까 dependency가 없다고 판단하고 computeCollidersJobHandle 부분을 임의로 날려버렸음. 혹시 에러나면 주의
 
 			inputDeps = applyPositionsJobHandle;
@@ -220,7 +226,7 @@ public class SPHSystem : JobComponentSystem
 			previousParticles[i].particlesDensity.Dispose();
 			previousParticles[i].particleIndices.Dispose();
 			previousParticles[i].cellOffsetTable.Dispose();
-			// previousParticles[i].copyColliders.Dispose();
+			previousParticles[i].copyColliders.Dispose();
 		}
 
 		previousParticles.Clear();

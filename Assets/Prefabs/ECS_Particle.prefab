@@ -57,10 +57,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_SerializedData:
     mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
-    material: {fileID: 2100000, guid: 3ef18dff08d194acab1c45870a62f434, type: 2}
+    material: {fileID: 2100000, guid: bd0caea96006f40b5a982bdf66e7ed64, type: 2}
     subMesh: 0
-    castShadows: 0
-    receiveShadows: 0
+    castShadows: 1
+    receiveShadows: 1
 --- !u!114 &114196019024292094
 MonoBehaviour:
   m_ObjectHideFlags: 1

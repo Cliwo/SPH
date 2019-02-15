@@ -11,7 +11,9 @@ public class SPHManager : MonoBehaviour {
 
 	[Header("Properties")]
 	[SerializeField] private int amount;
+	[SerializeField] private int inARow;
 	[SerializeField] private GameObject sphParticlePrefab;
+	[SerializeField] private GameObject sphColliderPrefab;
 
 
 	// Use this for initialization
@@ -24,14 +26,33 @@ public class SPHManager : MonoBehaviour {
 	
 	void AddCollider()
 	{
-		// 벽을 추가한다. 나는 벽이 코드내에서 작동하므로 필요 없을 듯
+		// Find all colliders
+        GameObject[] colliders = GameObject.FindGameObjectsWithTag("SPHCollider");
+
+        // Turn them into entities
+        NativeArray<Entity> entities = new NativeArray<Entity>(colliders.Length, Allocator.Temp);
+        manager.Instantiate(sphColliderPrefab, entities);
+
+        // Set data
+        for (int i = 0; i < colliders.Length; i++)
+        {
+            manager.SetComponentData(entities[i], new SPHCollider
+            {
+                position = colliders[i].transform.position,
+                right = colliders[i].transform.right,
+                up = colliders[i].transform.up,
+                scale = new float2(colliders[i].transform.localScale.x / 2f, colliders[i].transform.localScale.y / 2f)
+            });
+        }
+
+        // Done
+        entities.Dispose();
 	}
 	
 	void AddParticles(int _amount)
 	{
 		NativeArray<Entity> entities = new NativeArray<Entity>(_amount, Allocator.Temp);
         manager.Instantiate(sphParticlePrefab, entities);
-		int inARow = 8;
         for (int i = 0; i < _amount; i++)
         {
             manager.SetComponentData(entities[i], new Position { Value = new float3(i % inARow + UnityEngine.Random.Range(-0.1f, 0.1f), 2 + (i / inARow / inARow) * 1.1f, (i / inARow) % inARow) + UnityEngine.Random.Range(-0.1f, 0.1f) });

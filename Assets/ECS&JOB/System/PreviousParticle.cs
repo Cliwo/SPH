@@ -15,5 +15,5 @@ public struct PreviousParticle {
 	public NativeArray<int> particleIndices;
 
 	public NativeArray<int> cellOffsetTable;
-	// public NativeArray<> copyColliders;
+	public NativeArray<SPHCollider> copyColliders;
 }
