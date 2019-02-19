@@ -18,13 +18,12 @@ public struct ComputeDensityPressure : IJobParallelFor
 	public NativeArray<float> pressures;
 
 	private const float PI = 3.14159274F;
-	private const float GAS_CONST = 2000.0f;
+	private const float GAS_CONST = 3.0f;
 
 	
 
 	public void Execute(int index)
 	{
-		// Cache
 		int particleCount = particlesPosition.Length;
 		float3 position = particlesPosition[index].Value;
 		float density = 0.0f;
@@ -33,7 +32,6 @@ public struct ComputeDensityPressure : IJobParallelFor
 		int3 gridPosition = GridHash.Quantize(position, settings.Radius);
 		bool found;
 
-		// Find neighbors
 		for (int oi = 0; oi < 27; oi++)
 		{
 			i = oi * 3;
@@ -43,23 +41,30 @@ public struct ComputeDensityPressure : IJobParallelFor
 			found = hashMap.TryGetFirstValue(hash, out j, out iterator);
 			while (found)
 			{
-				// Neighbor found, get density
 				float3 rij = particlesPosition[j].Value - position;
 				float r2 = math.lengthsq(rij);
 
 				if (r2 < settings.SmoothingRadiusSq)
 				{
-					density += settings.mass * (315.0f / (64.0f * PI * math.pow(settings.SmoothingRadius, 9.0f))) * math.pow(settings.SmoothingRadiusSq - r2, 3.0f);
+					// float nine = PowUtility.IntPow(settings.SmoothingRadius, 9);
+					// float kernel = (315.0f / (64.0f * PI * nine));
+					// float temp = PowUtility.IntPow(settings.SmoothingRadiusSq - r2, 3);
+					// density += settings.mass * kernel * temp;
+					density += settings.mass * Poly6(settings.SmoothingRadius, r2);
 				}
 
-				// Next neighbor
 				found = hashMap.TryGetNextValue(out j, ref iterator);
 			}
 		}
-		// Debug.Log("Den : " + density);
-		// Apply density and compute/apply pressure
 		densities[index] = density;
 		pressures[index] = GAS_CONST * (density - settings.RestDensity);
+	}
+
+	private float Poly6(float h, float sqr)
+	{
+		float coef = 315.0f / (64.0f * Mathf.PI * PowUtility.IntPow(h,9)) ;
+		float result = coef * PowUtility.IntPow((h*h - sqr),3);
+		return result;
 	}
 }
 

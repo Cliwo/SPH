@@ -1,4 +1,7 @@
-﻿using Unity.Jobs;
+﻿using UnityEngine;
+using System.Collections.Generic;
+
+using Unity.Jobs;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Mathematics;
@@ -17,8 +20,7 @@ public struct ComputeForces : IJobParallelFor
 	public NativeArray<float3> particlesForces;
 
 	private const float PI = 3.14159274F;
-
-
+	public float deltaTime;
 
 	public void Execute(int index)
 	{
@@ -59,9 +61,14 @@ public struct ComputeForces : IJobParallelFor
 
 				if (r < settings.SmoothingRadius)
 				{
-					forcePressure += -math.normalize(rij) * settings.mass * (2.0f * pressure) / (2.0f * density) * (-45.0f / (PI * math.pow(settings.SmoothingRadius, 6.0f))) * math.pow(settings.SmoothingRadius - r, 2.0f);
+					float I_poly = pressure / (density * density);
+					float J_poly = particlesPressure[j] / (particlesDensity[j] * particlesDensity[j]);
 
-					forceViscosity += settings.Viscosity * settings.mass * (particlesVelocity[j].Value - velocity) / density * (45.0f / (PI * math.pow(settings.SmoothingRadius, 6.0f))) * (settings.SmoothingRadius - r);
+					forcePressure += settings.mass * (I_poly+J_poly) * -math.normalize(rij) * (-45.0f / (PI * PowUtility.IntPow(settings.SmoothingRadius, 6))) * PowUtility.IntPow(settings.SmoothingRadius - r, 2);
+					forcePressure *= density;
+					//2월 19일 위의 계산 에러날 경우 * density 적용하기.
+
+					forceViscosity += settings.Viscosity * settings.mass * (particlesVelocity[j].Value - velocity) / particlesDensity[j] * (45.0f / (PI * PowUtility.IntPow(settings.SmoothingRadius, 6))) * (settings.SmoothingRadius - r);
 				}
 
 				// Next neighbor
@@ -71,8 +78,24 @@ public struct ComputeForces : IJobParallelFor
 
 		// Gravity
 		float3 forceGravity = new float3(0.0f, -9.81f, 0.0f) * density * settings.GravityMult;
+		
+		// Log
+		int delTime = (int)(deltaTime);
+		if(delTime % 2 == 0)
+		{
+			// string line = "Hi";
+			string line = FrameDebuggerUtil.EncodeInCSV(
+			new KeyValuePair<string,string>("Frame", delTime+""),
+			new KeyValuePair<string,string>("Density", density+""),
+			new KeyValuePair<string,string>("Pressure", forcePressure+""),
+			new KeyValuePair<string,string>("Viscosity", forceViscosity+""),
+			new KeyValuePair<string,string>("Gravity", forceGravity+"")
+			);
+			FrameDebuggerUtil.EnqueueString(line);
+		}
 
 		// Apply
 		particlesForces[index] = forcePressure + forceViscosity + forceGravity;
+
 	}
 }

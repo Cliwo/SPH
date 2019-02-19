@@ -24,13 +24,14 @@ GameObject:
   - component: {fileID: 114196019024292094}
   - component: {fileID: 114021738131802242}
   - component: {fileID: 114932028740272854}
+  - component: {fileID: 114277642682040260}
   m_Layer: 0
   m_Name: ECS_Particle
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &4822440237385278
 Transform:
   m_ObjectHideFlags: 1
@@ -77,6 +78,22 @@ MonoBehaviour:
       x: 0
       y: 0
       z: 0
+--- !u!114 &114277642682040260
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1266493661454680}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1060dcfa4c8484da9a56580361de6f9f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_SerializedData:
+    Value:
+      x: 0
+      y: 0
+      z: 0
 --- !u!114 &114358602398566534
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -89,13 +106,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_SerializedData:
-    Radius: 1
-    SmoothingRadius: 1
-    SmoothingRadiusSq: 1
-    mass: 40
-    RestDensity: 5000
-    Viscosity: 0.1
-    GravityMult: 1500
+    Radius: 0.015
+    SmoothingRadius: 0.0457
+    SmoothingRadiusSq: 0.00208
+    mass: 0.02
+    RestDensity: 998.29
+    Viscosity: 3.5
+    GravityMult: 1
     Drag: 0.025
 --- !u!114 &114583166468963324
 MonoBehaviour:
