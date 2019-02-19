@@ -51,12 +51,18 @@ public class SPHManager : MonoBehaviour {
 	
 	void AddParticles(int _amount)
 	{
+		float scaleVal = 0.015f;
 		NativeArray<Entity> entities = new NativeArray<Entity>(_amount, Allocator.Temp);
         manager.Instantiate(sphParticlePrefab, entities);
         for (int i = 0; i < _amount; i++)
         {
-            manager.SetComponentData(entities[i], new Position { Value = new float3(i % inARow + UnityEngine.Random.Range(-0.1f, 0.1f), 2 + (i / inARow / inARow) * 1.1f, (i / inARow) % inARow) + UnityEngine.Random.Range(-0.1f, 0.1f) });
-        }
+			float3 pos = new float3(i % inARow , 
+			2 + (i / inARow / inARow),
+			(i / inARow) % inARow);
+			pos *= scaleVal * 2.0f;
+            manager.SetComponentData(entities[i], new Position { Value = pos});
+			manager.SetComponentData(entities[i], new Scale { Value = new float3(scaleVal)});
+		}
 
         entities.Dispose();
 	}
