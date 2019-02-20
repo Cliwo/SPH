@@ -660,35 +660,6 @@ Prefab:
       propertyPath: m_RootOrder
       value: 3
       objectReference: {fileID: 0}
-    - target: {fileID: 1266493661454680, guid: a007010a1b3a5415aa2e031122896fef, type: 2}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 114358602398566534, guid: a007010a1b3a5415aa2e031122896fef,
-        type: 2}
-      propertyPath: m_SerializedData.SmoothingRadiusSq
-      value: 0.00208
-      objectReference: {fileID: 0}
-    - target: {fileID: 114358602398566534, guid: a007010a1b3a5415aa2e031122896fef,
-        type: 2}
-      propertyPath: m_SerializedData.GravityMult
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 114358602398566534, guid: a007010a1b3a5415aa2e031122896fef,
-        type: 2}
-      propertyPath: m_SerializedData.Radius
-      value: 0.015
-      objectReference: {fileID: 0}
-    - target: {fileID: 114358602398566534, guid: a007010a1b3a5415aa2e031122896fef,
-        type: 2}
-      propertyPath: m_SerializedData.Viscosity
-      value: 3.5
-      objectReference: {fileID: 0}
-    - target: {fileID: 114358602398566534, guid: a007010a1b3a5415aa2e031122896fef,
-        type: 2}
-      propertyPath: m_SerializedData.mass
-      value: 0.02
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: a007010a1b3a5415aa2e031122896fef, type: 2}
   m_IsPrefabAsset: 0

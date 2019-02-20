@@ -41,7 +41,17 @@ public class ParticleManager : MonoBehaviour {
 	void UpdateDensity(Particle p)
 	{
 		//TODO : 업데이트시 가장 좋은건 kernel의 0조건을 먼저 판단하는 것임! (계산 처음부터 안하게) 시간나서 최적화 할 때 고려해보기
-		p.density = particles.Sum((j) => j.mass * SmoothKernel_Poly6(p.transform.position - j.transform.position, h));
+		// p.density = particles.Sum((j) => j.mass * SmoothKernel_Poly6(p.transform.position - j.transform.position, h));
+		float density = 0.0f;
+		for(int i = 0 ; i < particles.Count; i++)
+		{
+			float plus = particles[i].mass * SmoothKernel_Poly6(p.transform.position - particles[i].transform.position, h);
+			if(plus > 0)
+			{
+				density += particles[i].mass * SmoothKernel_Poly6(p.transform.position - particles[i].transform.position, h);
+			}
+		}
+		p.density=density;
 	}
 	void UpdateColorField(Particle p) //항상 Density update이후에 호출되어야한다.
 	{

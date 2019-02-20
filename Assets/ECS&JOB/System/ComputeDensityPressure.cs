@@ -6,6 +6,7 @@ using Unity.Collections;
 using Unity.Mathematics;
 using Unity.Transforms;
 
+using System.Collections.Generic;
 [BurstCompile]
 public struct ComputeDensityPressure : IJobParallelFor
 {
@@ -16,6 +17,7 @@ public struct ComputeDensityPressure : IJobParallelFor
 
 	public NativeArray<float> densities;
 	public NativeArray<float> pressures;
+	public float deltaTime;
 
 	private const float PI = 3.14159274F;
 	private const float GAS_CONST = 3.0f;
@@ -27,6 +29,7 @@ public struct ComputeDensityPressure : IJobParallelFor
 		int particleCount = particlesPosition.Length;
 		float3 position = particlesPosition[index].Value;
 		float density = 0.0f;
+		int count = 0;
 		int i, hash, j;
 		int3 gridOffset;
 		int3 gridPosition = GridHash.Quantize(position, settings.Radius);
@@ -46,15 +49,34 @@ public struct ComputeDensityPressure : IJobParallelFor
 
 				if (r2 < settings.SmoothingRadiusSq)
 				{
-					// float nine = PowUtility.IntPow(settings.SmoothingRadius, 9);
-					// float kernel = (315.0f / (64.0f * PI * nine));
-					// float temp = PowUtility.IntPow(settings.SmoothingRadiusSq - r2, 3);
-					// density += settings.mass * kernel * temp;
+					count ++;
 					density += settings.mass * Poly6(settings.SmoothingRadius, r2);
+					int delTim = (int)(deltaTime);
+					if(delTim % 2 == 0)
+					{
+						string line = FrameDebuggerUtil.EncodeInCSV(
+						new KeyValuePair<string,string>("Index", index+""),
+						new KeyValuePair<string,string>("distance", rij+""),
+						new KeyValuePair<string,string>("density", density+"")
+						);
+						FrameDebuggerUtil.EnqueueString(line);
+					}
 				}
 
 				found = hashMap.TryGetNextValue(out j, ref iterator);
 			}
+		}
+		int delTime = (int)(deltaTime);
+		if(delTime % 2 == 0)
+		{
+			// string line = "Hi";
+			string line = FrameDebuggerUtil.EncodeInCSV(
+			new KeyValuePair<string,string>("Index", index+""),
+			new KeyValuePair<string,string>("Frame", delTime+""),
+			new KeyValuePair<string,string>("Total Density", density+""),
+			new KeyValuePair<string,string>("Influence", count+"")
+			);
+			FrameDebuggerUtil.EnqueueString(line);
 		}
 		densities[index] = density;
 		pressures[index] = GAS_CONST * (density - settings.RestDensity);
@@ -62,7 +84,7 @@ public struct ComputeDensityPressure : IJobParallelFor
 
 	private float Poly6(float h, float sqr)
 	{
-		float coef = 315.0f / (64.0f * Mathf.PI * PowUtility.IntPow(h,9)) ;
+		float coef = 315.0f / (64.0f * PI * PowUtility.IntPow(h,9)) ;
 		float result = coef * PowUtility.IntPow((h*h - sqr),3);
 		return result;
 	}

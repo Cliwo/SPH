@@ -64,11 +64,13 @@ public struct ComputeForces : IJobParallelFor
 					float I_poly = pressure / (density * density);
 					float J_poly = particlesPressure[j] / (particlesDensity[j] * particlesDensity[j]);
 
-					forcePressure += settings.mass * (I_poly+J_poly) * -math.normalize(rij) * (-45.0f / (PI * PowUtility.IntPow(settings.SmoothingRadius, 6))) * PowUtility.IntPow(settings.SmoothingRadius - r, 2);
-					forcePressure *= density;
+					forcePressure += -settings.mass * (I_poly+J_poly) *  SpikyGradient(settings.SmoothingRadius, r, math.normalize(rij));
+					//math.normalize(rij) * (-45.0f / (PI * PowUtility.IntPow(settings.SmoothingRadius, 6))) * PowUtility.IntPow(settings.SmoothingRadius - r, 2);
+					
+					// forcePressure *= density;
 					//2월 19일 위의 계산 에러날 경우 * density 적용하기.
 
-					forceViscosity += settings.Viscosity * settings.mass * (particlesVelocity[j].Value - velocity) / particlesDensity[j] * (45.0f / (PI * PowUtility.IntPow(settings.SmoothingRadius, 6))) * (settings.SmoothingRadius - r);
+					forceViscosity += settings.Viscosity * settings.mass * (particlesVelocity[j].Value - velocity) / particlesDensity[j] * ViscosityLaplacian(settings.SmoothingRadius, r);
 				}
 
 				// Next neighbor
@@ -80,22 +82,34 @@ public struct ComputeForces : IJobParallelFor
 		float3 forceGravity = new float3(0.0f, -9.81f, 0.0f) * density * settings.GravityMult;
 		
 		// Log
-		int delTime = (int)(deltaTime);
-		if(delTime % 2 == 0)
-		{
-			// string line = "Hi";
-			string line = FrameDebuggerUtil.EncodeInCSV(
-			new KeyValuePair<string,string>("Frame", delTime+""),
-			new KeyValuePair<string,string>("Density", density+""),
-			new KeyValuePair<string,string>("Pressure", forcePressure+""),
-			new KeyValuePair<string,string>("Viscosity", forceViscosity+""),
-			new KeyValuePair<string,string>("Gravity", forceGravity+"")
-			);
-			FrameDebuggerUtil.EnqueueString(line);
-		}
+		// int delTime = (int)(deltaTime);
+		// if(delTime % 2 == 0)
+		// {
+		// 	// string line = "Hi";
+		// 	string line = FrameDebuggerUtil.EncodeInCSV(
+		// 	new KeyValuePair<string,string>("Frame", delTime+""),
+		// 	new KeyValuePair<string,string>("Density", density+""),
+		// 	new KeyValuePair<string,string>("Pressure", forcePressure+""),
+		// 	new KeyValuePair<string,string>("Viscosity", forceViscosity+""),
+		// 	new KeyValuePair<string,string>("Gravity", forceGravity+"")
+		// 	);
+		// 	FrameDebuggerUtil.EnqueueString(line);
+		// }
 
 		// Apply
 		particlesForces[index] = forcePressure + forceViscosity + forceGravity;
 
+	}
+
+	private float3 SpikyGradient(float h, float mag, float3 normalized)
+	{
+		float coef =- (45.0f / Mathf.PI / PowUtility.IntPow(h,6));
+		float i = PowUtility.IntPow(h - mag, 2);
+		return coef * i * normalized ;
+	}
+
+	private float ViscosityLaplacian(float h , float mag)
+	{
+		return 45.0f / Mathf.PI / PowUtility.IntPow(h,6) * (h - mag);
 	}
 }
