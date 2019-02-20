@@ -19,6 +19,7 @@ public struct ComputeForces : IJobParallelFor
 
 	public NativeArray<float3> particlesForces;
 
+	private int previousFrame;
 	private const float PI = 3.14159274F;
 	public float deltaTime;
 
@@ -102,9 +103,14 @@ public struct ComputeForces : IJobParallelFor
 		forcePressure *= -settings.mass * density;
 		
 		// Log
-		int delTime = (int)(deltaTime);
-		if(delTime % 2 == 0)
+		if(deltaTime < float.Epsilon)
 		{
+			previousFrame = -1;
+		}
+		int delTime = (int)(deltaTime);
+		if(delTime != previousFrame && delTime % 3 == 0)
+		{
+			previousFrame = delTime;
 			// string line = "Hi";
 			string line = FrameDebuggerUtil.EncodeInCSV(
 			new KeyValuePair<string,string>("Frame", delTime+""),

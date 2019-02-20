@@ -9,7 +9,7 @@ public static class FrameDebuggerUtil {
 	public static List<string> buffer;
 	public static List<string> secondBuffer;
 	private static FileStream file;
-	private static int FlushThreshold = 5000;
+	private static int FlushThreshold = 1000;
 	private static bool bufferDir = false;
 	private static string path = "/Users/chan/SPH/log.csv";
 
