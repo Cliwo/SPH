@@ -97,26 +97,26 @@ public struct ComputeForces : IJobParallelFor
 			float kappa = -laplacian / magnitude;
 			forceSurface = (sigma * kappa * n);
 		}
-		
-		// Log
-		// int delTime = (int)(deltaTime);
-		// if(delTime % 2 == 0)
-		// {
-		// 	// string line = "Hi";
-		// 	string line = FrameDebuggerUtil.EncodeInCSV(
-		// 	new KeyValuePair<string,string>("Frame", delTime+""),
-		// 	new KeyValuePair<string,string>("Density", density+""),
-		// 	new KeyValuePair<string,string>("Pressure", forcePressure+""),
-		// 	new KeyValuePair<string,string>("Viscosity", forceViscosity+"")
-		// 	);
-		// 	FrameDebuggerUtil.EnqueueString(line);
-		// }
 
 		forceViscosity *= settings.Viscosity;
 		forcePressure *= -settings.mass * density;
-		// Apply
-		particlesForces[index] = forceSurface + forcePressure + forceViscosity + forceGravity;
+		
+		// Log
+		int delTime = (int)(deltaTime);
+		if(delTime % 2 == 0)
+		{
+			// string line = "Hi";
+			string line = FrameDebuggerUtil.EncodeInCSV(
+			new KeyValuePair<string,string>("Frame", delTime+""),
+			new KeyValuePair<string,string>("Density", density+""),
+			new KeyValuePair<string,string>("Pressure", forcePressure+"")
+			);
+			FrameDebuggerUtil.EnqueueString(line);
+		}
 
+		// Apply
+		particlesForces[index] =  forcePressure;
+		// particlesForces[index] = forceSurface + forcePressure + forceViscosity + forceGravity;
 	}
 	private float3 Poly6Gradient(float h, float3 position, float sqr)
 	{
