@@ -59,7 +59,7 @@ public class SPHManager : MonoBehaviour {
 			float3 pos = new float3(i % inARow , 
 			2 + (i / inARow / inARow),
 			(i / inARow) % inARow);
-			pos *= scaleVal * 1.8f;
+			pos *= scaleVal * 1.4f;
             manager.SetComponentData(entities[i], new Position { Value = pos});
 			manager.SetComponentData(entities[i], new Scale { Value = new float3(scaleVal)});
 		}

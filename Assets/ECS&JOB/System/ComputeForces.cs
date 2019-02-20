@@ -37,6 +37,10 @@ public struct ComputeForces : IJobParallelFor
 		int3 gridPosition = GridHash.Quantize(position, settings.Radius);
 		bool found;
 
+		//Surface
+		float3 n = new float3(0, 0, 0);
+		float3 forceSurface = new float3(0,0,0);
+		float laplacian = 0.0f;
 		// Physics
 		// Find neighbors
 		for (int oi = 0; oi < 27; oi++)
@@ -64,13 +68,16 @@ public struct ComputeForces : IJobParallelFor
 					float I_poly = pressure / (density * density);
 					float J_poly = particlesPressure[j] / (particlesDensity[j] * particlesDensity[j]);
 
-					forcePressure += -settings.mass * (I_poly+J_poly) *  SpikyGradient(settings.SmoothingRadius, r, math.normalize(rij));
+					forcePressure += (I_poly+J_poly) *  SpikyGradient(settings.SmoothingRadius, r, math.normalize(rij));
 					//math.normalize(rij) * (-45.0f / (PI * PowUtility.IntPow(settings.SmoothingRadius, 6))) * PowUtility.IntPow(settings.SmoothingRadius - r, 2);
-					
-					// forcePressure *= density;
-					//2월 19일 위의 계산 에러날 경우 * density 적용하기.
+					forceViscosity += settings.mass * (particlesVelocity[j].Value - velocity) / particlesDensity[j] * ViscosityLaplacian(settings.SmoothingRadius, r);
 
-					forceViscosity += settings.Viscosity * settings.mass * (particlesVelocity[j].Value - velocity) / particlesDensity[j] * ViscosityLaplacian(settings.SmoothingRadius, r);
+					
+					n += settings.mass / particlesDensity[j] * Poly6Gradient(settings.SmoothingRadius, rij, r2);
+					laplacian += settings.mass / particlesDensity[j] 
+								* Poly6Laplacian(settings.SmoothingRadius, r2);
+					
+					
 				}
 
 				// Next neighbor
@@ -81,6 +88,16 @@ public struct ComputeForces : IJobParallelFor
 		// Gravity
 		float3 forceGravity = new float3(0.0f, -9.81f, 0.0f) * density * settings.GravityMult;
 		
+		//Surface
+		const float sigma = 0.07197f; // 0.0719-> N/m 단위  71.97mN/m (밀리뉴턴, 미터 단위) (25도에서)) 
+		const float threshold = 7.065f;
+		float magnitude = math.length(n);
+		if(magnitude >= threshold)
+		{
+			float kappa = -laplacian / magnitude;
+			forceSurface = (sigma * kappa * n);
+		}
+		
 		// Log
 		// int delTime = (int)(deltaTime);
 		// if(delTime % 2 == 0)
@@ -90,17 +107,29 @@ public struct ComputeForces : IJobParallelFor
 		// 	new KeyValuePair<string,string>("Frame", delTime+""),
 		// 	new KeyValuePair<string,string>("Density", density+""),
 		// 	new KeyValuePair<string,string>("Pressure", forcePressure+""),
-		// 	new KeyValuePair<string,string>("Viscosity", forceViscosity+""),
-		// 	new KeyValuePair<string,string>("Gravity", forceGravity+"")
+		// 	new KeyValuePair<string,string>("Viscosity", forceViscosity+"")
 		// 	);
 		// 	FrameDebuggerUtil.EnqueueString(line);
 		// }
 
+		forceViscosity *= settings.Viscosity;
+		forcePressure *= -settings.mass * density;
 		// Apply
-		particlesForces[index] = forcePressure + forceViscosity + forceGravity;
+		particlesForces[index] = forceSurface + forcePressure + forceViscosity + forceGravity;
 
 	}
-
+	private float3 Poly6Gradient(float h, float3 position, float sqr)
+	{
+		float coef = - 945.0f / (32*Mathf.PI*PowUtility.IntPow(h,9));
+		Vector3 result  =  coef * position * PowUtility.IntPow((h*h - sqr), 2);
+		return result;
+	}
+	private float Poly6Laplacian(float h, float sqr)
+	{
+		float result = -945.0f / (32.0f * Mathf.PI * PowUtility.IntPow(h,9)) * (h*h - sqr) 
+			* (3.0f * h*h - 7.0f * sqr);
+		return result;
+	}
 	private float3 SpikyGradient(float h, float mag, float3 normalized)
 	{
 		float coef =- (45.0f / Mathf.PI / PowUtility.IntPow(h,6));

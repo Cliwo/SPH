@@ -51,40 +51,40 @@ public struct ComputeDensityPressure : IJobParallelFor
 				{
 					count ++;
 					density += settings.mass * Poly6(settings.SmoothingRadius, r2);
-					int delTim = (int)(deltaTime);
-					if(delTim % 2 == 0)
-					{
-						string line = FrameDebuggerUtil.EncodeInCSV(
-						new KeyValuePair<string,string>("Index", index+""),
-						new KeyValuePair<string,string>("distance", rij+""),
-						new KeyValuePair<string,string>("density", density+"")
-						);
-						FrameDebuggerUtil.EnqueueString(line);
-					}
+					// int delTim = (int)(deltaTime);
+					// if(delTim % 2 == 0)
+					// {
+					// 	string line = FrameDebuggerUtil.EncodeInCSV(
+					// 	new KeyValuePair<string,string>("Index", index+""),
+					// 	new KeyValuePair<string,string>("distance", rij+""),
+					// 	new KeyValuePair<string,string>("density", density+"")
+					// 	);
+					// 	FrameDebuggerUtil.EnqueueString(line);
+					// }
 				}
 
 				found = hashMap.TryGetNextValue(out j, ref iterator);
 			}
 		}
-		int delTime = (int)(deltaTime);
-		if(delTime % 2 == 0)
-		{
-			// string line = "Hi";
-			string line = FrameDebuggerUtil.EncodeInCSV(
-			new KeyValuePair<string,string>("Index", index+""),
-			new KeyValuePair<string,string>("Frame", delTime+""),
-			new KeyValuePair<string,string>("Total Density", density+""),
-			new KeyValuePair<string,string>("Influence", count+"")
-			);
-			FrameDebuggerUtil.EnqueueString(line);
-		}
+		// int delTime = (int)(deltaTime);
+		// if(delTime % 2 == 0)
+		// {
+		// 	// string line = "Hi";
+		// 	string line = FrameDebuggerUtil.EncodeInCSV(
+		// 	new KeyValuePair<string,string>("Index", index+""),
+		// 	new KeyValuePair<string,string>("Frame", delTime+""),
+		// 	new KeyValuePair<string,string>("Total Density", density+""),
+		// 	new KeyValuePair<string,string>("Influence", count+"")
+		// 	);
+		// 	FrameDebuggerUtil.EnqueueString(line);
+		// }
 		densities[index] = density;
 		pressures[index] = GAS_CONST * (density - settings.RestDensity);
 	}
 
 	private float Poly6(float h, float sqr)
 	{
-		float coef = 315.0f / (64.0f * PI * PowUtility.IntPow(h,9)) ;
+		float coef = 315.0f / (64.0f * PI * PowUtility.IntPow(h,9));
 		float result = coef * PowUtility.IntPow((h*h - sqr),3);
 		return result;
 	}
