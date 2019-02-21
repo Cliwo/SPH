@@ -12,6 +12,8 @@ public struct SPHParticle : ISharedComponentData
 	public float Viscosity; //이게 왜 여기에 필요해? 전역아니야? 
 	public float GravityMult;
 	public float Drag;
+	public float SurfaceTension;
+	public float SurfaceThreshold;
 }
 
 public class SPHParticleComponent : SharedComponentDataWrapper<SPHParticle>{}

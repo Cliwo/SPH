@@ -35,6 +35,11 @@ public struct ComputeForces : IJobParallelFor
 		int3 gridPosition = GridHash.Quantize(position, settings.Radius);
 		bool found;
 
+		// Surface
+		float3 n = new float3(0,0,0);
+		float laplacian = 0.0f;
+		float3 forceSurface = new float3(0,0,0);
+		
 		// Physics
 		// Find neighbors
 		for (int oi = 0; oi < 27; oi++)
@@ -56,12 +61,16 @@ public struct ComputeForces : IJobParallelFor
 				float3 rij = particlesPosition[j].Value - position;
 				float r2 = math.lengthsq(rij);
 				float r = math.sqrt(r2);
-
+				
 				if (r < settings.SmoothingRadius)
 				{
 					forcePressure += -math.normalize(rij) * settings.mass * (2.0f * pressure) / (2.0f * density) * (-45.0f / (PI * math.pow(settings.SmoothingRadius, 6.0f))) * math.pow(settings.SmoothingRadius - r, 2.0f);
 
 					forceViscosity += settings.Viscosity * settings.mass * (particlesVelocity[j].Value - velocity) / density * (45.0f / (PI * math.pow(settings.SmoothingRadius, 6.0f))) * (settings.SmoothingRadius - r);
+
+					float j_term = settings.mass / density;
+					n += j_term * Poly6Gradient(settings.SmoothingRadius, rij, r2);
+					laplacian += j_term * Poly6Laplacian(settings.SmoothingRadius, r2);
 				}
 
 				// Next neighbor
@@ -72,7 +81,30 @@ public struct ComputeForces : IJobParallelFor
 		// Gravity
 		float3 forceGravity = new float3(0.0f, -9.81f, 0.0f) * density * settings.GravityMult;
 
+		//Surface
+		float mag = math.length(n);
+		if(mag > settings.SurfaceThreshold)
+		{
+			float kappa = -laplacian / mag;
+			forceSurface = settings.SurfaceTension * kappa * n;
+		}
+		
 		// Apply
-		particlesForces[index] = forcePressure + forceViscosity + forceGravity;
+		particlesForces[index] = forcePressure + forceViscosity + forceSurface + forceGravity;
+		// particlesForces[index] = forceSurface + forceViscosity;
+		// particlesForces[index] = forcePressure;
+	}	
+
+	private float3 Poly6Gradient(float h, float3 pos, float sqr)
+	{
+		float coef = - 945.0f / (32.0f * PI * math.pow(h,9));
+		float3 result  =  coef * pos * math.pow((h*h - sqr), 2);
+		return result;
+	}
+	private float Poly6Laplacian(float h, float sqr)
+	{
+		float result = -945.0f / (32.0f * PI * math.pow(h,9)) * (h*h - sqr) 
+				* (3.0f * h*h - 7.0f * sqr);
+		return result;
 	}
 }

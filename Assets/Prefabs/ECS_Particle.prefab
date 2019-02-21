@@ -30,7 +30,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &4822440237385278
 Transform:
   m_ObjectHideFlags: 1
@@ -97,6 +97,8 @@ MonoBehaviour:
     Viscosity: 0.1
     GravityMult: 1500
     Drag: 0.025
+    SurfaceTension: 71.97
+    SurfaceThreshold: 0
 --- !u!114 &114583166468963324
 MonoBehaviour:
   m_ObjectHideFlags: 1
