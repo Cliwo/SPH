@@ -12,7 +12,7 @@ public class Particle : MonoBehaviour { //Mono일 필요가 없을 듯
 	private static Vector3 nearFloorNormal = new Vector3(0.0f, 0.0f, 1.0f);
 	private static Vector3 farFloorNormal = new Vector3(0.0f, 0.0f, -1.0f);
 	
-	public const float width = 0.15f;
+	public const float width = 0.30f;
 	public const float widthHalf = width * 0.5f;
 	private static Vector3 bottomFloorPosition = new Vector3(0.0f, 0.0f, 0.0f);
 	private static Vector3 topFloorPosition = new Vector3(0.0f, width, 0.0f);

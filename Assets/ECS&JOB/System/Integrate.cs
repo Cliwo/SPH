@@ -14,7 +14,7 @@ public struct Integrate : IJobParallelFor
 	public NativeArray<Position> particlesPosition;
 	public NativeArray<SPHVelocity> particlesVelocity;
 
-	private const float DT = 0.0008f;
+	private const float DT = 0.001f;
 
 
 

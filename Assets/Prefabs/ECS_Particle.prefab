@@ -24,6 +24,7 @@ GameObject:
   - component: {fileID: 114196019024292094}
   - component: {fileID: 114021738131802242}
   - component: {fileID: 114932028740272854}
+  - component: {fileID: 114205293384280064}
   m_Layer: 0
   m_Name: ECS_Particle
   m_TagString: Untagged
@@ -77,6 +78,22 @@ MonoBehaviour:
       x: 0
       y: 0
       z: 0
+--- !u!114 &114205293384280064
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1266493661454680}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1060dcfa4c8484da9a56580361de6f9f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_SerializedData:
+    Value:
+      x: 0
+      y: 0
+      z: 0
 --- !u!114 &114358602398566534
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -89,15 +106,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_SerializedData:
-    Radius: 1
+    Radius: 0.2
     SmoothingRadius: 1
     SmoothingRadiusSq: 1
-    mass: 40
-    RestDensity: 5000
-    Viscosity: 0.1
-    GravityMult: 1500
+    mass: 33.51
+    RestDensity: 1000
+    Viscosity: 0.00089
+    GravityMult: 100
     Drag: 0.025
-    SurfaceTension: 71.97
+    SurfaceTension: 0.0728
     SurfaceThreshold: 0
 --- !u!114 &114583166468963324
 MonoBehaviour:

@@ -18,7 +18,7 @@ public struct ComputeDensityPressure : IJobParallelFor
 	public NativeArray<float> pressures;
 
 	private const float PI = 3.14159274F;
-	private const float GAS_CONST = 2000.0f;
+	private const float GAS_CONST = 461.52f;
 
 	
 
