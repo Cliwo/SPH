@@ -18,7 +18,7 @@ public struct ComputeDensityPressure : IJobParallelFor
 	public NativeArray<float> pressures;
 
 	private const float PI = 3.14159274F;
-	private const float GAS_CONST = 461.52f;
+	
 
 	
 
@@ -59,7 +59,7 @@ public struct ComputeDensityPressure : IJobParallelFor
 		// Debug.Log("Den : " + density);
 		// Apply density and compute/apply pressure
 		densities[index] = density;
-		pressures[index] = GAS_CONST * (density - settings.RestDensity);
+		pressures[index] = settings.GasConstant * (density - settings.RestDensity);
 	}
 }
 

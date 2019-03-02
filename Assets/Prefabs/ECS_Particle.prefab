@@ -106,17 +106,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_SerializedData:
-    Radius: 0.04
-    SmoothingRadius: 1
-    SmoothingRadiusSq: 1
-    mass: 0.064
-    RestDensity: 1000
-    Viscosity: 0.00089
-    GravityMult: 100
-    Drag: 0.025
+    Radius: 0.015
+    SmoothingRadius: 0.0457
+    SmoothingRadiusSq: 0.00208
+    mass: 0.02
+    RestDensity: 998.29
+    GasConstant: 3
+    Viscosity: 3.5
+    GravityMult: 1
+    Drag: 0
     SurfaceTension: 0.0728
-    SurfaceThreshold: 0
-    TimeStep: 0.000006
+    SurfaceThreshold: 7.065
+    TimeStep: 0.0003
 --- !u!114 &114583166468963324
 MonoBehaviour:
   m_ObjectHideFlags: 1

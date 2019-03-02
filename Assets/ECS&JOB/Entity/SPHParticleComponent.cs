@@ -9,6 +9,7 @@ public struct SPHParticle : ISharedComponentData
 	public float SmoothingRadiusSq;
 	public float mass;
 	public float RestDensity;
+	public float GasConstant;
 	public float Viscosity; //이게 왜 여기에 필요해? 전역아니야? 
 	public float GravityMult;
 	public float Drag;
