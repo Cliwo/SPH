@@ -174,6 +174,7 @@ public class SPHSystem : JobComponentSystem
             // Integrate
             Integrate integrateJob = new Integrate
             {
+				timeStep = settings.TimeStep,
                 particlesPosition = particlesPosition,
                 particlesVelocity = particlesVelocity,
                 particlesDensity = particlesDensity,

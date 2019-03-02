@@ -8,15 +8,12 @@ using Unity.Transforms;
 [BurstCompile]
 public struct Integrate : IJobParallelFor
 {
+	[ReadOnly] public float timeStep;
 	[ReadOnly] public NativeArray<float3> particlesForces;
 	[ReadOnly] public NativeArray<float> particlesDensity;
 
 	public NativeArray<Position> particlesPosition;
 	public NativeArray<SPHVelocity> particlesVelocity;
-
-	private const float DT = 0.001f;
-
-
 
 	public void Execute(int index)
 	{
@@ -25,8 +22,8 @@ public struct Integrate : IJobParallelFor
 		float3 position = particlesPosition[index].Value;
 
 		// Process
-		velocity += DT * particlesForces[index] / particlesDensity[index];
-		position += DT * velocity;
+		velocity += timeStep * particlesForces[index] / particlesDensity[index];
+		position += timeStep * velocity;
 
 
 		// Apply

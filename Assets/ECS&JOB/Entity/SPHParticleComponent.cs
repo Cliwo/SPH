@@ -14,6 +14,8 @@ public struct SPHParticle : ISharedComponentData
 	public float Drag;
 	public float SurfaceTension;
 	public float SurfaceThreshold;
+
+	public float TimeStep;
 }
 
 public class SPHParticleComponent : SharedComponentDataWrapper<SPHParticle>{}
