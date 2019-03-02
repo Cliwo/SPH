@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEditor;
 
 using Unity.Entities;
 using Unity.Collections;
@@ -10,10 +11,10 @@ public class SPHManager : MonoBehaviour {
 	EntityManager manager;
 
 	[Header("Properties")]
-	[SerializeField] private int amount;
-	[SerializeField] private int inARow;
-	[SerializeField] private GameObject sphParticlePrefab;
-	[SerializeField] private GameObject sphColliderPrefab;
+	 public int amount;
+	 public int inARow;
+	public GameObject sphParticlePrefab;
+	public GameObject sphColliderPrefab;
 
 
 	// Use this for initialization
@@ -51,16 +52,16 @@ public class SPHManager : MonoBehaviour {
 	
 	void AddParticles(int _amount)
 	{
-		float scaleVale = 0.2f;
 		NativeArray<Entity> entities = new NativeArray<Entity>(_amount, Allocator.Temp);
+		SPHParticle setting = sphParticlePrefab.GetComponent<SPHParticleComponent>().Value;
+
         manager.Instantiate(sphParticlePrefab, entities);
         for (int i = 0; i < _amount; i++)
         {
 			Position pos = new Position { Value = new float3(i % inARow + UnityEngine.Random.Range(-0.1f, 0.1f), 2 + (i / inARow / inARow) * 1.1f, (i / inARow) % inARow) + UnityEngine.Random.Range(-0.1f, 0.1f)};
-			pos.Value *= scaleVale;
+			pos.Value *= setting.Radius;
             manager.SetComponentData(entities[i], pos);
-			manager.SetComponentData(entities[i], new Scale{ Value = new float3(scaleVale) });
-			// manager.SetComponentData(entities[i], new Position { Value = new float3(i % inARow , 2 + (i / inARow / inARow) * 1.0f, (i / inARow) % inARow) });
+			manager.SetComponentData(entities[i], new Scale{ Value = new float3(setting.Radius) });
 		}
 
         entities.Dispose();
@@ -83,3 +84,59 @@ public class SPHManager : MonoBehaviour {
 	}
 }
 
+[CustomEditor(typeof(SPHManager)), CanEditMultipleObjects]
+public class SPHManagerEditor : Editor {
+	SPHManager script;
+	bool isGenerated = false;
+	List<GameObject> env;
+	private void OnEnable() 
+	{
+		env = new List<GameObject>();
+		script = (SPHManager)target;
+	}
+	public override void OnInspectorGUI() {
+
+		if(GUILayout.Button("Set Environments"))
+		{
+			const float padding = 3.0f;
+			SPHParticle setting = script.sphParticlePrefab.GetComponent<SPHParticleComponent>().Value;
+			float x, y;
+			y = (script.amount / script.inARow / script.inARow) * setting.Radius * padding;
+			x = script.inARow * setting.Radius * padding;
+			
+			env.ForEach((item) => {DestroyImmediate(item);});
+			env.Clear();
+
+			Vector3 upDownScale = new Vector3(x,x, 1);
+			Vector3 sideScale = new Vector3(x,y, 1);
+
+			for(int i = 0 ; i < 6; i ++)
+			{
+				env.Add(Instantiate<GameObject>(script.sphColliderPrefab));
+			}
+
+			env[0].transform.localScale = upDownScale;
+			env[0].transform.position = new Vector3(env[0].transform.position.x, env[0].transform.position.y - y/2, env[0].transform.position.z);
+			
+			env[1].transform.localScale = upDownScale;
+			env[1].transform.position = new Vector3(env[1].transform.position.x, env[1].transform.position.y + y/2, env[1].transform.position.z);
+			env[1].transform.rotation = Quaternion.Euler(-90.0f, 0.0f, 0.0f);
+			
+			env[2].transform.localScale = sideScale;
+			env[3].transform.localScale = sideScale;
+			env[4].transform.localScale = sideScale;
+			env[5].transform.localScale = sideScale;
+
+			env[2].transform.Translate(new Vector3(-x/2.0f,0,0));
+			env[2].transform.rotation = Quaternion.Euler(0.0f, -90.0f, 0.0f);
+			env[3].transform.Translate(new Vector3(+x/2.0f,0,0));
+			env[3].transform.rotation = Quaternion.Euler(0.0f, +90.0f, 0.0f);
+			env[4].transform.rotation = Quaternion.Euler(0.0f, -180.0f, 0.0f);
+			env[4].transform.Translate(new Vector3(0,0,+x/2.0f));
+			env[5].transform.rotation = Quaternion.Euler(0.0f, 0.0f, 0.0f);
+			env[5].transform.Translate(new Vector3(0,0,+x/2.0f));
+			
+		}
+		DrawDefaultInspector();
+	}
+}

@@ -106,10 +106,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_SerializedData:
-    Radius: 0.2
+    Radius: 0.02
     SmoothingRadius: 1
     SmoothingRadiusSq: 1
-    mass: 33.51
+    mass: 0.008
     RestDensity: 1000
     Viscosity: 0.00089
     GravityMult: 100
