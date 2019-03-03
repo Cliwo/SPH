@@ -56,12 +56,21 @@ public class SPHManager : MonoBehaviour {
 		SPHParticle setting = sphParticlePrefab.GetComponent<SPHParticleComponent>().Value;
 
         manager.Instantiate(sphParticlePrefab, entities);
-        for (int i = 0; i < _amount; i++)
-        {
-			Position pos = new Position { Value = new float3(i % inARow + UnityEngine.Random.Range(-0.1f, 0.1f), 2 + (i / inARow / inARow) * 1.1f, (i / inARow) % inARow) + UnityEngine.Random.Range(-0.1f, 0.1f)};
-			pos.Value *= setting.Radius;
-            manager.SetComponentData(entities[i], pos);
-			manager.SetComponentData(entities[i], new Scale{ Value = new float3(setting.Radius) });
+        // for (int i = 0; i < _amount; i++)
+        // {
+		// 	// Position pos = new Position { Value = new float3(i % inARow + UnityEngine.Random.Range(-0.1f, 0.1f), 2 + (i / inARow / inARow) * 1.1f, (i / inARow) % inARow) + UnityEngine.Random.Range(-0.1f, 0.1f)};
+		// 	Position pos = new Position { Value = new float3(i % inARow, 2 + (i / inARow / inARow) * 1.1f, (i / inARow) % inARow)};
+		// 	pos.Value *= setting.Radius;
+        //     manager.SetComponentData(entities[i], pos);
+		// 	manager.SetComponentData(entities[i], new Scale{ Value = new float3(setting.Radius) });
+		// }
+		for(int i = 0 ; i < _amount; i++)
+		{
+			Position pos = new Position { Value = new float3(i % inARow, 2 + (i / inARow / inARow) * 1f, (i / inARow) % inARow)};
+			pos.Value *= setting.SmoothingRadius/2;
+			manager.SetComponentData(entities[i], pos);
+		 	manager.SetComponentData(entities[i], new Scale{ Value = new float3(setting.Radius) });
+
 		}
 
         entities.Dispose();
