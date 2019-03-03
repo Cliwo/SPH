@@ -1,8 +1,11 @@
-﻿using Unity.Jobs;
+﻿using System.Collections.Generic;
+
+using Unity.Jobs;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Mathematics;
 using Unity.Transforms;
+
 [BurstCompile]
 public struct ComputeForces : IJobParallelFor
 {
@@ -16,9 +19,9 @@ public struct ComputeForces : IJobParallelFor
 
 	public NativeArray<float3> particlesForces;
 
+	public float gameTime;
+
 	private const float PI = 3.14159274F;
-
-
 
 	public void Execute(int index)
 	{
@@ -89,6 +92,21 @@ public struct ComputeForces : IJobParallelFor
 			forceSurface = settings.SurfaceTension * kappa * n;
 		}
 		
+
+		// int time = (int)(gameTime / 0.017);
+		// if(time % 10 == 0)
+		// {
+		// 	string debugT = FrameDebuggerUtil.EncodeInCSV(
+		// 	new KeyValuePair<string, string>("Frame", ""+time),
+		// 	new KeyValuePair<string, string>("pressure",""+ToStringFloat3(forcePressure)),
+		// 	new KeyValuePair<string, string>("viscosity",""+ToStringFloat3(forceViscosity)),
+		// 	new KeyValuePair<string, string>("surface",""+ToStringFloat3(forceSurface)),
+		// 	new KeyValuePair<string, string>("Density", ""+density)
+		// 	);
+		// 	FrameDebuggerUtil.EnqueueString(debugT);
+		// }
+		
+
 		// Apply
 		particlesForces[index] = forcePressure + forceViscosity + forceSurface + forceGravity;
 		// particlesForces[index] = forceSurface + forceViscosity;
@@ -106,5 +124,10 @@ public struct ComputeForces : IJobParallelFor
 		float result = -945.0f / (32.0f * PI * math.pow(h,9)) * (h*h - sqr) 
 				* (3.0f * h*h - 7.0f * sqr);
 		return result;
+	}
+
+	private string ToStringFloat3(float3 val)
+	{
+		return val.x + " " + val.y + " " + val.z;
 	}
 }

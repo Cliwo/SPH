@@ -6,6 +6,7 @@ using Unity.Collections;
 using Unity.Mathematics;
 using Unity.Transforms;
 
+
 [BurstCompile]
 public struct ComputeDensityPressure : IJobParallelFor
 {
@@ -16,6 +17,8 @@ public struct ComputeDensityPressure : IJobParallelFor
 
 	public NativeArray<float> densities;
 	public NativeArray<float> pressures;
+
+	public float gameTime;
 
 	private const float PI = 3.14159274F;
 	
@@ -33,6 +36,7 @@ public struct ComputeDensityPressure : IJobParallelFor
 		int3 gridPosition = GridHash.Quantize(position, settings.Radius);
 		bool found;
 
+		int count = 0;
 		// Find neighbors
 		for (int oi = 0; oi < 27; oi++)
 		{
@@ -41,9 +45,11 @@ public struct ComputeDensityPressure : IJobParallelFor
 			hash = GridHash.Hash(gridPosition + gridOffset);
 			NativeMultiHashMapIterator<int> iterator;
 			found = hashMap.TryGetFirstValue(hash, out j, out iterator);
+			
 			while (found)
 			{
 				// Neighbor found, get density
+				count ++;
 				float3 rij = particlesPosition[j].Value - position;
 				float r2 = math.lengthsq(rij);
 
@@ -56,8 +62,17 @@ public struct ComputeDensityPressure : IJobParallelFor
 				found = hashMap.TryGetNextValue(out j, ref iterator);
 			}
 		}
-		// Debug.Log("Den : " + density);
-		// Apply density and compute/apply pressure
+
+		// int time = (int)(gameTime / 0.017);
+		// if(time % 10 == 0)
+		// {
+		// 	string line = FrameDebuggerUtil.EncodeInCSV(
+		// 		new System.Collections.Generic.KeyValuePair<string, string>("Frame" , "" + time),
+		// 		new System.Collections.Generic.KeyValuePair<string,string>("Index" , "" + index),
+		// 		new System.Collections.Generic.KeyValuePair<string,string>("Found Count" , "" + count)
+		// 	);
+		// 	FrameDebuggerUtil.EnqueueString(line);
+		// }
 		densities[index] = density;
 		pressures[index] = settings.GasConstant * (density - settings.RestDensity);
 	}

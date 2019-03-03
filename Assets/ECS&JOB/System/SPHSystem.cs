@@ -151,7 +151,8 @@ public class SPHSystem : JobComponentSystem
                 pressures = particlesPressure,
                 hashMap = hashMap,
                 cellOffsetTable = cellOffsetTableNative,
-                settings = settings
+                settings = settings,
+				gameTime = Time.time
             };
             JobHandle computeDensityPressureJobHandle = computeDensityPressureJob.Schedule(particleCount, 64, mergedMergedParticlesDensityPressure);
 
@@ -167,7 +168,8 @@ public class SPHSystem : JobComponentSystem
                 particlesDensity = particlesDensity,
                 cellOffsetTable = cellOffsetTableNative,
                 hashMap = hashMap,
-                settings = settings
+                settings = settings,
+				gameTime = Time.time
             };
             JobHandle computeForcesJobHandle = computeForcesJob.Schedule(particleCount, 64, mergeComputeDensityPressureVelocityForces);
 
