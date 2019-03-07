@@ -45,7 +45,8 @@ public struct ComputeForces : IJobParallelFor
 		
 		// Physics
 		// Find neighbors
-		for (int oi = 0; oi < 27; oi++)
+		int neighbor = cellOffsetTable.Length/3;
+		for (int oi = 0; oi < neighbor; oi++)
 		{
 			i = oi * 3;
 			gridOffset = new int3(cellOffsetTable[i], cellOffsetTable[i + 1], cellOffsetTable[i + 2]);

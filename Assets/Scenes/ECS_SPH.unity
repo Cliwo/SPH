@@ -522,7 +522,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 750f75b056398430e9d99891e79ad444, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  amount: 72
+  amount: 80
   inARow: 4
   sphParticlePrefab: {fileID: 1266493661454680, guid: a007010a1b3a5415aa2e031122896fef,
     type: 2}

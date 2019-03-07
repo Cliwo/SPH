@@ -43,8 +43,9 @@ public class ParticleGeneratorEditor : Editor {
 				{
 					for (int k = 0; k < countInRow; k++)
 					{
-						Vector3 pos = new Vector3((i-countInRow/2) * offset, (j-countInRow/2) * offset, (k-countInRow/2) * offset);
-						pos += center;
+						Vector3 pos = new Vector3((i-countInRow/2), (j-countInRow/2), (k-countInRow/2));
+						pos *= script.m.h / 2.0f;
+						pos += center; 
 						set.Add(pos);
 					}
 				}

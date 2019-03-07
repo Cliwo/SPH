@@ -15,7 +15,7 @@ public struct ComputeColliders : IJobParallelFor
 	public NativeArray<Position> particlesPosition;
 	public NativeArray<SPHVelocity> particlesVelocity;
 
-	private const float BOUND_DAMPING = -0.5f;
+	private const float BOUND_DAMPING = -0.9f;
 
 
 

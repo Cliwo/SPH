@@ -2,9 +2,12 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+using System.IO;
+using System.Text;
+
 
 public class Particle : MonoBehaviour { //Mono일 필요가 없을 듯
-	private MeshRenderer m_render;
+	// private MeshRenderer m_render;
 	private static Vector3 bottomFloorNormal = new Vector3(0.0f, 1.0f, 0.0f);
 	private static Vector3 rightFloorNormal = new Vector3(-1.0f, 0.0f, 0.0f);
 	private static Vector3 leftFloorNormal = new Vector3(1.0f, 0.0f, 0.0f);
@@ -12,7 +15,7 @@ public class Particle : MonoBehaviour { //Mono일 필요가 없을 듯
 	private static Vector3 nearFloorNormal = new Vector3(0.0f, 0.0f, 1.0f);
 	private static Vector3 farFloorNormal = new Vector3(0.0f, 0.0f, -1.0f);
 	
-	public const float width = 0.30f;
+	public const float width = 0.2f;
 	public const float widthHalf = width * 0.5f;
 	private static Vector3 bottomFloorPosition = new Vector3(0.0f, 0.0f, 0.0f);
 	private static Vector3 topFloorPosition = new Vector3(0.0f, width, 0.0f);
@@ -45,9 +48,11 @@ public class Particle : MonoBehaviour { //Mono일 필요가 없을 듯
 	public Vector3 f_viscosity;
 	public Vector3 f_surface;
 
+	static FileStream fstream;
 	void Awake() 
 	{
-		m_render = gameObject.GetComponent<MeshRenderer>();
+		// m_render = gameObject.GetComponent<MeshRenderer>();
+		// fstream = File.Open("/Users/chan/Desktop/SPH/No_ECS.csv", FileMode.Create);
 	}
 	public void AddAcceleration(Vector3 acc)
 	{
@@ -58,28 +63,28 @@ public class Particle : MonoBehaviour { //Mono일 필요가 없을 듯
 		this.acceleration = Vector3.zero;
 	}
 
-	public float alpha = 0.7f; //반발계수
-	public void Apply(float deltaTime)
+	public float alpha = 0.9f; //반발계수
+	public void Apply(float deltaTime, int frame)
 	{
 		this.acceleration += f_pressure;
 		this.acceleration += f_viscosity;
 		this.acceleration += f_surface;
 		this.acceleration /= this.density;
 
+		// if(frame % 10 == 0)
+		// {
+		// 	string line = "Frame, " + frame + //",ID , " + 
+		// 	",Pressure , " + f_pressure + ",Viscosity , " + f_viscosity + ",Surface , " + f_surface + ",Density , " + density;
+			
+		// 	byte[] data = new UTF8Encoding(true).GetBytes(line + "\n");
+		// 	fstream.Write(data, 0, data.Length);
+		// }
+
 		Vector3 newPosition = transform.position + velocity * deltaTime + acceleration * deltaTime *deltaTime;
 		Vector3 newVelocity = (newPosition - transform.position) / deltaTime;
 
 		this.transform.position = newPosition;
 		this.velocity = newVelocity;
-
-		if(surfaceFlag)
-		{
-			m_render.material.color = Color.red;
-		}
-		else
-		{
-			m_render.material.color = Color.blue;
-		}
 
 		CalcWallCollision(bottomFloorNormal, bottomFloorPosition);
 		// CalcWallCollision(topFloorNormal , topFloorPosition);

@@ -31,7 +31,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &4822440237385278
 Transform:
   m_ObjectHideFlags: 1
@@ -60,8 +60,8 @@ MonoBehaviour:
     mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
     material: {fileID: 2100000, guid: bd0caea96006f40b5a982bdf66e7ed64, type: 2}
     subMesh: 0
-    castShadows: 1
-    receiveShadows: 1
+    castShadows: 0
+    receiveShadows: 0
 --- !u!114 &114196019024292094
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -114,10 +114,10 @@ MonoBehaviour:
     GasConstant: 3
     Viscosity: 3.5
     GravityMult: 1
-    Drag: 0
+    Drag: 0.4
     SurfaceTension: 0.0728
     SurfaceThreshold: 7.065
-    TimeStep: 0.0003
+    TimeStep: 0.0004
 --- !u!114 &114583166468963324
 MonoBehaviour:
   m_ObjectHideFlags: 1

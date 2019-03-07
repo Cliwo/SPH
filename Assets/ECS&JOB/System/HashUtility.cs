@@ -30,7 +30,7 @@ public struct GridHash
 
     public static int3 Quantize(float3 v, float cellSize)
     {
-        return new int3(math.floor(v / cellSize));
+        return new int3(math.floor(v / cellSize)); //위치를 cellSize로 나눈다. cellSize는 Sphere의 radius이므로 공간을 radius단위의 voxel로 나눈 것이 된다. 
     }
 
     public static int Hash(float2 v, float cellSize)
@@ -43,7 +43,7 @@ public struct GridHash
         return new int2(math.floor(v / cellSize));
     }
 
-    public static int Hash(int3 grid)
+    public static int Hash(int3 grid) //단순한 hash 함수, int3 를 int로 매핑한다. 
     {
         unchecked
         {

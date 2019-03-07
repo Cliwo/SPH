@@ -10,7 +10,7 @@ using Unity.Transforms;
 [BurstCompile]
 public struct ComputeDensityPressure : IJobParallelFor
 {
-	[ReadOnly] public NativeMultiHashMap<int, int> hashMap;
+	[ReadOnly] public NativeMultiHashMap<int, int> hashMap; //왼쪽이 hash, 오른쪽이 index 
 	[ReadOnly] public NativeArray<int> cellOffsetTable;
 	[ReadOnly] public NativeArray<Position> particlesPosition;
 	[ReadOnly] public SPHParticle settings;
@@ -33,12 +33,13 @@ public struct ComputeDensityPressure : IJobParallelFor
 		float density = 0.0f;
 		int i, hash, j;
 		int3 gridOffset;
-		int3 gridPosition = GridHash.Quantize(position, settings.Radius);
+		int3 gridPosition = GridHash.Quantize(position, settings.Radius); //공간을 voxel로 쪼갰을 때 voxel의 position 이라고 보면 된다. 
 		bool found;
 
 		int count = 0;
 		// Find neighbors
-		for (int oi = 0; oi < 27; oi++)
+		int neighbor = cellOffsetTable.Length / 3;
+		for (int oi = 0; oi < neighbor; oi++)
 		{
 			i = oi * 3;
 			gridOffset = new int3(cellOffsetTable[i], cellOffsetTable[i + 1], cellOffsetTable[i + 2]);
@@ -68,6 +69,7 @@ public struct ComputeDensityPressure : IJobParallelFor
 		// {
 		// 	string line = FrameDebuggerUtil.EncodeInCSV(
 		// 		new System.Collections.Generic.KeyValuePair<string, string>("Frame" , "" + time),
+		// 		new System.Collections.Generic.KeyValuePair<string,string>("Density" , "" + density),
 		// 		new System.Collections.Generic.KeyValuePair<string,string>("Index" , "" + index),
 		// 		new System.Collections.Generic.KeyValuePair<string,string>("Found Count" , "" + count)
 		// 	);

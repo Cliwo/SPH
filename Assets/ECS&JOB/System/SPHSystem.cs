@@ -15,15 +15,30 @@ public class SPHSystem : JobComponentSystem
 	List<SPHParticle> uniqueTypes = new List<SPHParticle>(10);
 	List<PreviousParticle> previousParticles = new List<PreviousParticle>();
 
-	private static readonly int[] cellOffsetTable =
-    {
-        1, 1, 1, 1, 1, 0, 1, 1, -1, 1, 0, 1, 1, 0, 0, 1, 0, -1, 1, -1, 1, 1, -1, 0, 1, -1, -1,
-        0, 1, 1, 0, 1, 0, 0, 1, -1, 0, 0, 1, 0, 0, 0, 0, 0, -1, 0, -1, 1, 0, -1, 0, 0, -1, -1,
-        -1, 1, 1, -1, 1, 0, -1, 1, -1, -1, 0, 1, -1, 0, 0, -1, 0, -1, -1, -1, 1, -1, -1, 0, -1, -1, -1
-    };
-
+	// private static readonly int[] cellOffsetTable =
+    // {
+    //     1, 1, 1, 1, 1, 0, 1, 1, -1, 1, 0, 1, 1, 0, 0, 1, 0, -1, 1, -1, 1, 1, -1, 0, 1, -1, -1,
+    //     0, 1, 1, 0, 1, 0, 0, 1, -1, 0, 0, 1, 0, 0, 0, 0, 0, -1, 0, -1, 1, 0, -1, 0, 0, -1, -1,
+    //     -1, 1, 1, -1, 1, 0, -1, 1, -1, -1, 0, 1, -1, 0, 0, -1, 0, -1, -1, -1, 1, -1, -1, 0, -1, -1, -1
+    // }; 
+	public static int[] cellOffsetTable;
+	
 	protected override void OnCreateManager()
 	{
+		List<int> offsetList = new List<int>();
+		int wide = 3;
+		for(int i = -wide ; i <= wide; i++)
+		{
+			for(int j = -wide ; j <= wide ; j++)
+			{
+				for(int k = -wide ; k <= wide ; k++)
+				{
+					offsetList.Add(i); offsetList.Add(j); offsetList.Add(k);
+				}
+			}
+		}
+		cellOffsetTable = offsetList.ToArray();
+
 		SPHCharacterGroup = GetComponentGroup(ComponentType.ReadOnly(typeof(SPHParticle)), typeof(Position), typeof(SPHVelocity));
 		//position 과 velocity는 수정해야해서 readonly 아닌듯?
 		SPHColliderGroup = GetComponentGroup(ComponentType.ReadOnly(typeof(SPHCollider)));
@@ -31,7 +46,7 @@ public class SPHSystem : JobComponentSystem
 	protected override JobHandle OnUpdate(JobHandle inputDeps)
 	{
 		EntityManager.GetAllUniqueSharedComponentData(uniqueTypes);
-
+		//Unique한 Shared Data이다. 우리가 쓰는 Data중에 Shared Data는 SPHParticle (settings) 밖에 없다 
 		ComponentDataArray<SPHCollider> colliders = SPHColliderGroup.GetComponentDataArray<SPHCollider>();
 		int colliderCount = colliders.Length;
 		//collider 부분 안함. 
@@ -41,18 +56,19 @@ public class SPHSystem : JobComponentSystem
 			//데이터를 캐싱한다.
 			//Get the current chunk setting
 			SPHParticle settings = uniqueTypes[typeIndex];
-			SPHCharacterGroup.SetFilter(settings); //Filter가 뭔데? 
+			SPHCharacterGroup.SetFilter(settings); //Filter가 뭔데? , 아 SPHParticle은 제외하고 다른 Component를 보겠다는건가? 
 
 			// Cache the data
-			ComponentDataArray<Position> positions = SPHCharacterGroup.GetComponentDataArray<Position>();
-			ComponentDataArray<SPHVelocity> velocities = SPHCharacterGroup.GetComponentDataArray<SPHVelocity>();
+			ComponentDataArray<Position> positions = SPHCharacterGroup.GetComponentDataArray<Position>(); //현재 모든 파티클의 Position
+			ComponentDataArray<SPHVelocity> velocities = SPHCharacterGroup.GetComponentDataArray<SPHVelocity>(); //현재 모든 파티클의 Velocity
 
 			int cacheIndex = typeIndex - 1;
 			int particleCount = positions.Length;
 
-			NativeMultiHashMap<int, int> hashMap = new NativeMultiHashMap<int, int>(particleCount, Allocator.TempJob);
+			NativeMultiHashMap<int, int> hashMap = new NativeMultiHashMap<int, int>(particleCount, Allocator.TempJob); //Hash
 			// 성능향상을 위한 HashMap
 
+			// PreviousParticle을 채우기 위해 미리 생성한 데이터 공간이다. 생성하면서 data를 채워주지 않기 떄문에 메모리만 할당된 상태이다. 
 			NativeArray<Position> particlesPosition = new NativeArray<Position>(particleCount, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
 			NativeArray<SPHVelocity> particlesVelocity = new NativeArray<SPHVelocity>(particleCount, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
 			NativeArray<float3> particlesForces = new NativeArray<float3>(particleCount, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
@@ -64,7 +80,7 @@ public class SPHSystem : JobComponentSystem
 			NativeArray<SPHCollider> copyColliders = new NativeArray<SPHCollider>(colliderCount, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
 
 			/* Part 2 : PreviousParticle 생성 */
-			PreviousParticle nextParticles = new PreviousParticle
+			PreviousParticle nextParticles = new PreviousParticle //PreviousParticle 은 그냥 일반적인 struct이다. Component가 아님. 
 			{
 				hashMap = hashMap,
 				particlesPosition = particlesPosition,
@@ -77,11 +93,11 @@ public class SPHSystem : JobComponentSystem
 				copyColliders = copyColliders
 			};
 
-			if (cacheIndex > previousParticles.Count - 1)
+			if (cacheIndex > previousParticles.Count - 1) //cacheIndex는 현재 확인하고 있는 UniqueSharedComponent의 index - 1값이다. 즉 0부터 1씩 증가한다. 
 			{
-				previousParticles.Add(nextParticles);
+				previousParticles.Add(nextParticles); 
 			}
-			else
+			else //파티클을 previousParticles에 삽입하지 않은 경우
 			{
 				previousParticles[cacheIndex].hashMap.Dispose();
 				previousParticles[cacheIndex].particlesPosition.Dispose();
@@ -93,13 +109,12 @@ public class SPHSystem : JobComponentSystem
 				previousParticles[cacheIndex].cellOffsetTable.Dispose();
 				previousParticles[cacheIndex].copyColliders.Dispose();
 			}
-			// 의문 : 지금 생성하는 방식이 미리 메모리 할당을 다하고 (new)에서, 조건을 보고 Count가 Index를 넘어서면 미리 생성한걸 해제하는 것 같은데 
-			// 그렇게 안하고 조건을 미리보고 조건에 맞으면 생성하면 안됨?? 코드가 더럽지 않음 이러면?
 			previousParticles[cacheIndex] = nextParticles;
 
 
 			/* Part 3 : Job 생성 (?) */
 			// Copy the component data to native arrays
+			// Position 과 Velocity는 이전결과에서 수정하는 것이라서 복사하고, Pressure, Density, Indices, Force는 새로 계산할것이기 떄문에 초기화만 해준다. 
 			CopyComponentData<Position> particlesPositionJob = new CopyComponentData<Position> { Source = positions, Results = particlesPosition };
 			JobHandle particlesPositionJobHandle = particlesPositionJob.Schedule(particleCount, 64, inputDeps);
 
@@ -131,15 +146,20 @@ public class SPHSystem : JobComponentSystem
 				cellRadius = settings.Radius
 			};
 			JobHandle hashPositionsJobHandle = hashPositionsJob.Schedule(particleCount, 64, particlesPositionJobHandle);
+			//Hash를 하기 위해선 position 정보가 필요하다, position 정보와 sync를 맞춘다. 
 
 			JobHandle mergedPositionIndicesJobHandle = JobHandle.CombineDependencies(hashPositionsJobHandle, particleIndicesJobHandle);
+			//Hash하고나서 index를 쓸 거라서 index와 sync를 맞춘다. 
 
 			MergeParticles mergeParticlesJob = new MergeParticles
 			{
 				particleIndices = particleIndices
 			};
 			JobHandle mergeParticlesJobHandle = mergeParticlesJob.Schedule(hashMap, 64, mergedPositionIndicesJobHandle);
+			/// ![확실하진않음] : Hash에서 index와 hash를 연결했다, 이 때 index는 Particle과는 mapping되어 있지 않은 그저 실행 순서 index였나보다. 위의 MergeParticles를 통해서
+			/// particle이 각자의 index를 갖게된다. 이 떄문에 이미 index와 연결된 Hash가 particle과 연결된다. 
 
+			//이제 hash가 끝났으므로 Density, Pressure, Force를 계산할 시간. 따라서 sync를 맞춘다. 
 			JobHandle mergedMergedParticlesDensityPressure = JobHandle.CombineDependencies(mergeParticlesJobHandle, particlesPressureJobHandle, particlesDensityJobHandle);
 
 			/* Part 5 : 드디어 SPH를 해결하는 파트 */

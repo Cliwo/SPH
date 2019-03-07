@@ -25,7 +25,6 @@ public class ParticleManager : MonoBehaviour {
 	{
 		particles.ForEach((p) => p.ClearAcceleration());
 		particles.ForEach((p) => UpdateDensity(p)); //중요. 매번 처음에 density 업데이트를 해야함.
-		//particles.ForEach((p) => UpdateColorField(p));
 
 		if(ApplyPressure)
 			particles.ForEach((p) => p.f_pressure = (CalcPressure(p) * PressureCoef));
@@ -36,7 +35,8 @@ public class ParticleManager : MonoBehaviour {
 		if(ApplyGravity)
 			particles.ForEach((p) => p.AddAcceleration(gravity * p.density * GravityCoef)); //Gravity
 		
-		particles.ForEach((p) => p.Apply(Steps));
+		int frame = (int)(Time.time / 0.017f);
+		particles.ForEach((p) => p.Apply(Steps, frame));
 	}
 	void UpdateDensity(Particle p)
 	{
