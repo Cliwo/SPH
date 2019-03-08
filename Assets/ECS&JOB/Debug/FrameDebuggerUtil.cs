@@ -11,7 +11,7 @@ public static class FrameDebuggerUtil {
 	private static FileStream file;
 	private static int FlushThreshold = 1000;
 	private static bool bufferDir = false;
-	private static string path = "/Users/chan/SPH/log_density.csv";
+	private static string path = "C:\\Users\\Chan\\Documents\\SPH\\Assets\\log_forces.csv";
 
 	public static string EncodeInCSV(params KeyValuePair<string, string>[] csvItems)
 	{
@@ -36,6 +36,10 @@ public static class FrameDebuggerUtil {
 		{
 			FlushToFile();
 		}
+	}
+	public static void Free()
+	{
+		file.Close();
 	}
 	private static void FlushToFile()
 	{

@@ -109,11 +109,11 @@ MonoBehaviour:
     Radius: 0.015
     SmoothingRadius: 0.0457
     SmoothingRadiusSq: 0.00208
-    mass: 0.02
+    mass: 0.003375
     RestDensity: 998.29
     GasConstant: 3
     Viscosity: 3.5
-    GravityMult: 1
+    GravityMult: 20
     Drag: 0.4
     SurfaceTension: 0.0728
     SurfaceThreshold: 7.065
